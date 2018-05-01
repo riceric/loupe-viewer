@@ -1,0 +1,13 @@
+# Packages / Libraries #
+**/node_modules
+
+# Compiled source #
+*.css
+*.map
+.sass-cache/
+
+# OS generated files #
+.DS_Store
+.DS_Store?
+.Trashes
+Thumbs.db

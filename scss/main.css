@@ -1,0 +1,103 @@
+.loupe {
+  margin: 0;
+  background-position: 50% 50%;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  cursor: zoom-in;
+  border: solid 1px #fff;
+  outline: solid 1px #ccc; }
+
+.loupe .loupe__img {
+  transition: opacity .5s;
+  display: block;
+  width: 100%; }
+
+.loupe.active {
+  cursor: zoom-out; }
+
+.loupe.active .loupe__img {
+  opacity: 0; }
+
+/* Slick Slide Modifications for viewer */
+.loupe__slide {
+  display: block;
+  height: auto;
+  width: 100%;
+  margin: 0 auto; }
+
+.slider-nav {
+  display: block;
+  width: 500px;
+  padding: 20px;
+  background: #eee;
+  text-align: center;
+  margin: 0 auto; }
+
+.slick-dots {
+  position: relative;
+  bottom: auto; }
+
+.slick-prev {
+  left: 25px; }
+
+.slick-next {
+  right: 25px; }
+
+.loupe-nav__item {
+  position: relative;
+  height: 80px;
+  width: 80px;
+  border: solid 1px white;
+  margin: 10px;
+  overflow: hidden; }
+  .loupe-nav__item--video::after {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: "Fontawesome";
+    font-size: 1.5rem;
+    color: #fff;
+    content: "\f144"; }
+  .loupe-nav__item.is-active {
+    outline: solid 1px black; }
+  @media (max-width: 767px) {
+    .loupe-nav__item {
+      display: inline-block;
+      height: auto;
+      width: auto;
+      text-align: center;
+      background: none !important;
+      border: none;
+      outline: none; }
+      .loupe-nav__item::after {
+        content: "\f10c";
+        font-family: "Fontawesome"; }
+      .loupe-nav__item--video {
+        position: relative;
+        top: auto;
+        left: auto; }
+        .loupe-nav__item--video::after {
+          display: inline-block;
+          position: relative;
+          top: auto;
+          left: auto;
+          transform: none;
+          font-size: 1rem;
+          color: initial;
+          content: "\f01d"; }
+        .loupe-nav__item--video.is-active::after {
+          content: "\f144"; }
+      .loupe-nav__item.is-active {
+        outline: none; }
+        .loupe-nav__item.is-active::after {
+          content: "\f111"; } }
+.loupe-nav__img {
+  height: 100%; }
+  @media (max-width: 767px) {
+    .loupe-nav__img {
+      display: none !important; } }
+
+/*# sourceMappingURL=main.css.map */
