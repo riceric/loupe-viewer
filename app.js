@@ -2,16 +2,18 @@
  * Require JQuery, sticky-kit
  */
 $(function() {
-    var loadImages, toggleZoom;
+    var toggleZoom, loadCarouselViewers;
     /* TODO figure out how to store Scene7 parameters */
-    var widthParamThumb = '?wid=50&hei=50';
-    var widthParamDefault = '?wid=768&hei=768';
-    var widthParamloupe = '?wid=1024&hei=1024';
+    var widthParamThumb = '?wid=80&hei=80';
+    var widthParamDefault = '?wid=900&hei=675';
+    var widthParamloupe = '?wid=1024&hei=768';
 
     toggleZoom = function(selector) {
       $(selector).on({
         click: function() {
-          $(this).toggleClass('active');
+            var imgURI = $(this).data('lgimg');
+            $(this).css('background-image','url('+imgURI+')');
+            $(this).toggleClass('active');
         },
         mousemove: function(e) {
           if ($(this).hasClass('active')) {
@@ -30,57 +32,6 @@ $(function() {
       }); 
     };
 
-    /**
-     * Load images from data object to the viewer
-     * @param {String} imgData JSON data containing image URLs
-     * @param {String} target Selector that displays selected image
-     * @param {String} thumbNails Selector that contains thumbnail navigation
-     * 
-     */
-    loadImages = function(imgData, target, thumbNails) {
-        var viewer = $(target);
-        var thumbsNav = $(thumbNails);
-        /* TODO: Figure out where to store default N/A image */
-        var imgNA = "/on/demandware.static/Sites-Columbia_US-Site/-/default/dw3ad2cfbf/images/noimagelarge.png";
-        var loupe = $('.loupe');
-        var loupeimg = $('.loupe__img');
-
-        // Setup thumbnails
-        for (var i in imgData["images"]) {
-            var thumb = "<div class='pdp-thumb'><img src='"+ imgData.images[i]+widthParamThumb+"' data-zoomout='"+imgData.images[i]+"' /></div>";
-            thumbsNav.append(thumb);
-        }
-        for (var j in imgData["videos"]) {
-            /* TODO: Where should I get the video thumbnail? */
-            thumbsNav.append("<div class='pdp-thumb pdp-thumb--video'><img src='http://via.placeholder.com/50x50' /></div>");
-        }
-
-        // Setup onclick behavior for thumbnails
-        $('.pdp-thumb')
-            .on('click', function() {
-                var imgURL = $(this).find('img').data('zoomout');
-                // Update 'selected state'
-                $('.pdp-thumb--selected').toggleClass('pdp-thumb--selected');
-                $(this).toggleClass('pdp-thumb--selected');
-
-                // Check for video
-                if ( $(this).hasClass('pdp-thumb--video') ) {
-                    loadYouTubeVideo();
-                }
-                else {
-                    // Load normal size image into viewer
-                    loupeimg.attr('src', imgURL+widthParamDefault);
-                    // Load magnified image into viewer
-                    loupe.css('background-image','url('+imgURL+widthParamloupe+')');
-                }
-            }
-        );
-
-        // Init first thumbnail
-        $('.pdp-thumb:first').click();
-
-    }
-
    /**
      * Load carousel with image viewers; Sets up two carousels: 1) Main images 2) Navigation for images
      * @param {String} imgData JSON data containing image URLs
@@ -89,44 +40,57 @@ $(function() {
      * 
      */
     loadCarouselViewers = function(imgData, slidesSelector, navSelector) {
-        var slides = $(slidesSelector);
-        var nav = $(navSelector);
+        var $slides = $(slidesSelector);
+        var $nav = $(navSelector);
 
         /* TODO: Figure out where to store default N/A image */
         var imgNA = "/on/demandware.static/Sites-Columbia_US-Site/-/default/dw3ad2cfbf/images/noimagelarge.png";
-        var loupe = $('.loupe');
-        var loupeimg = $('.loupe__img');
 
         // Setup carousel slides
         for (var i in imgData["images"]) {
-            var slide = "<div class='loupe__slide'><figure class='loupe' style='background-image:url("+imgData.images[i]+widthParamloupe+")'><div id='loupe__lens'><img class='loupe__img' src='"+imgData.images[i]+widthParamDefault+"'></div></figure></div>";
-            var navSlide = "<div><i class='fa fa-circle'></i></div>";
-            slides.append(slide);
-            nav.append(navSlide);
+            var slide = "<div class='loupe__slide'><figure class='loupe' data-lgimg='"+imgData.images[i]+widthParamloupe+"'><div id='loupe__lens'><img src='"+imgData.images[i]+widthParamDefault+"' class='loupe__img'></div></figure></div>";
+            var navSlide = "<div class='loupe-nav__item'><img src='"+imgData.images[i]+widthParamThumb+"' class='loupe-nav__img' /></div>";
+            $slides.append(slide);
+            $nav.append(navSlide);
         }
-        for (var j in imgData["videos"]) {
-            /* TODO: Where should I get the video thumbnail? */
-            // Append video slide to main carousel and nav carousel
-            slides.append("<div class='pdp-thumb pdp-thumb--video'><img src='http://via.placeholder.com/50x50' /></div>");
-            nav.append("<div><i class='fa fa-play-circle'></i></div>")
-        }
+        // for (var j in imgData["videos"]) {
+        //     /* TODO: Where should I get the video thumbnail? */
+        //     // Append video slide to main carousel and nav carousel
+        //     $slides.append("<div class='loupe__slide loupe__slide--video'><img src='https://img.youtube.com/vi/s6Ine_o2lLM/hqdefault.jpg' /></div>");
+        //     $nav.append("<div class='loupe-nav__item loupe-nav__item--video'><img src='https://img.youtube.com/vi/s6Ine_o2lLM/default.jpg' class='loupe-nav__img' /></div>")
+        // }
 
         // Init carousel (test only)
         // Requires slick.js to be loaded
-        $(function(){
-            slides.slick({
+        // **** TEMPORARILY COMMENT OUT ****
+         $(function(){
+            $slides.slick({
                 slidesToShow: 1,
                 slidesToScroll: 1,
                 arrows: false,
                 fade: true,
                 asNavFor: navSelector
             });
-            nav.slick({
+            $nav.slick({
                 slidesToShow: 5,
                 slidesToScroll: 1,
                 asNavFor: slidesSelector,
-                centerMode: true,
-                focusOnSelect: true
+                focusOnSelect: true,
+                vertical: true,
+                infinite: false,
+
+                responsive: [
+                    {
+                        breakpoint: 767,
+                        settings: {
+                            // slidesToShow: 5,
+                            // slidesToScroll: 3,
+                            centerMode: true,
+                            focusOnSelect: true,
+                            vertical: false,
+                        }
+                    }                  
+                ]               
             });
         });
     }    
@@ -177,10 +141,8 @@ $(function() {
     };
 
     // Load images for selected product variant
-    // loadImages( imgData, '.loupe', '.pdp-thumbs');
-    loadCarouselViewers( imgData, '.slider-product', '.slider-nav');
-    // Initial carousel
-    // $('.pdp-thumbs').slick();
+    loadCarouselViewers( imgData, '.loupe-main', '.loupe-nav');
+    // loadCarouselViewers( imgData, '.loupe-main', '.loupe-nav');
     // Initiate loupe mode on image
     toggleZoom( '.loupe' );
   });
