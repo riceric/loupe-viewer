@@ -1,14 +1,20 @@
 /**
+ * Loupe viewer, designed for viewing and magnifying a set of product images
  * Require JQuery, sticky-kit
  */
-$(function() {
-    var toggleZoom, loadCarouselViewers;
+var Loupe = (function() {
     /* TODO figure out how to store Scene7 parameters */
-    var widthParamThumb = '?wid=80&hei=80';
-    var widthParamDefault = '?wid=900&hei=675';
-    var widthParamloupe = '?wid=1024&hei=768';
+    var dimParamThumbs = '?wid=80&hei=80';
+    var dimParamDefault = '?wid=900&hei=675';
+    var dimParamHQ = '?wid=1280&hei=960';
 
-    toggleZoom = function(selector) {
+    /**
+     * Activate 'magnifying glass' effect. 
+     * Pre-requisite: HTML must follow a template
+     * @access public
+     * @param {String} selector DOM selector containing loupe images
+     */
+    var toggleZoom = function(selector) {
       $(selector).on({
         click: function() {
             var imgURI = $(this).data('lgimg');
@@ -34,12 +40,13 @@ $(function() {
 
    /**
      * Load carousel with image viewers; Sets up two carousels: 1) Main images 2) Navigation for images
+     * @access public
      * @param {String} imgData JSON data containing image URLs
      * @param {String} slidesSelector Selector that contains carousel slickjs slides
      * @param {String} navSelector Selector that contains carousel slickjs nav
      * 
      */
-    loadCarouselViewers = function(imgData, slidesSelector, navSelector) {
+    var loadCarouselViewers = function(imgData, slidesSelector, navSelector) {
         var $slides = $(slidesSelector);
         var $nav = $(navSelector);
 
@@ -48,8 +55,8 @@ $(function() {
 
         // Setup carousel slides
         for (var i in imgData["images"]) {
-            var slide = "<div class='loupe__slide'><figure class='loupe' data-lgimg='"+imgData.images[i]+widthParamloupe+"'><div id='loupe__lens'><img src='"+imgData.images[i]+widthParamDefault+"' class='loupe__img'></div></figure></div>";
-            var navSlide = "<div class='loupe-nav__item'><img src='"+imgData.images[i]+widthParamThumb+"' class='loupe-nav__img' /></div>";
+            var slide = "<div class='loupe__slide'><figure class='loupe' data-lgimg='"+imgData.images[i]+dimParamHQ+"'><div id='loupe__lens'><img src='"+imgData.images[i]+dimParamDefault+"' class='loupe__img'></div></figure></div>";
+            var navSlide = "<div class='loupe-nav__item'><img src='"+imgData.images[i]+dimParamThumbs+"' class='loupe-nav__img' /></div>";
             $slides.append(slide);
             $nav.append(navSlide);
         }
@@ -62,43 +69,40 @@ $(function() {
 
         // Init carousel (test only)
         // Requires slick.js to be loaded
-        // **** TEMPORARILY COMMENT OUT ****
-         $(function(){
-            $slides.slick({
-                slidesToShow: 1,
-                slidesToScroll: 1,
-                arrows: false,
-                fade: true,
-                asNavFor: navSelector
-            });
-            $nav.slick({
-                slidesToShow: 5,
-                slidesToScroll: 1,
-                asNavFor: slidesSelector,
-                focusOnSelect: true,
-                vertical: true,
-                infinite: false,
-
-                responsive: [
-                    {
-                        breakpoint: 767,
-                        settings: {
-                            // slidesToShow: 5,
-                            // slidesToScroll: 3,
-                            centerMode: true,
-                            focusOnSelect: true,
-                            vertical: false,
-                        }
-                    }                  
-                ]               
-            });
+        $slides.slick({
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            arrows: false,
+            fade: true,
+            asNavFor: navSelector
         });
-    }    
+        $nav.slick({
+            slidesToShow: 5,
+            slidesToScroll: 1,
+            asNavFor: slidesSelector,
+            focusOnSelect: true,
+            vertical: true,
+            infinite: false,
+
+            responsive: [
+                {
+                    breakpoint: 767,
+                    settings: {
+                        // slidesToShow: 5,
+                        // slidesToScroll: 3,
+                        centerMode: true,
+                        focusOnSelect: true,
+                        vertical: false,
+                    }
+                }                  
+            ]               
+        });
+    };   
 
     /**
      * Load YouTube video
      */
-    loadYouTubeVideo = function() {
+    var loadYouTubeVideo = function() {
         // Load the IFrame Player API code asynchronously.
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/player_api";
@@ -122,13 +126,22 @@ $(function() {
         }
     }
     
+    return {
+        toggleZoom: toggleZoom,
+        loadCarouselViewers: loadCarouselViewers
+    };
+
+})();
+
+/* ########## INITIALIZATION ########## */
+$(function() {
     /* Placeholder for JSON data that should come from PDP variant
         TODO: Change reference to json object 
         * N/A image URL?
         * alt text?
         * type, eg. _f, _b, a1, a2, a3, video?
     */
-    var imgData = {
+   var imgData = {
         "images": [
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_f",
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_b",
@@ -141,8 +154,8 @@ $(function() {
     };
 
     // Load images for selected product variant
-    loadCarouselViewers( imgData, '.loupe-main', '.loupe-nav');
-    // loadCarouselViewers( imgData, '.loupe-main', '.loupe-nav');
+    Loupe.loadCarouselViewers( imgData, '.loupe-main', '.loupe-nav');
     // Initiate loupe mode on image
-    toggleZoom( '.loupe' );
-  });
+    Loupe.toggleZoom( '.loupe' );
+
+});
