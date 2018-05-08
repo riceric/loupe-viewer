@@ -2,7 +2,8 @@
 <html>
 <head>
   <title>Product Viewer: Prototype</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.2/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link href="https://www.columbia.com/on/demandware.static/Sites-Columbia_US-Site/-/en_US/v1525280503620/css_s/main.css" rel="stylesheet" type="text/css">
+  <!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.2/css/bootstrap.css" rel="stylesheet" type="text/css"> -->
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" rel="stylesheet" type="text/css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" rel="stylesheet" type="text/css">
@@ -22,29 +23,31 @@
             class="breadcrumb-item active">Men’s Powder Keg™ Down Jacket</li>
       </ol>
     </nav>
-    <div class="row">
-      <div class="col-12 col-md-8">
-        <h2 class="">Men’s Powder Keg™ Down Jacket</h2>
-      </div>
-    </div><!--.row-->
   </div><!--.container.px-0-->
 
   <div class="container">
     <div class="row">
       <div class="col-12 col-md-8">
         <div class="row">        
-          <div class="loupe-main col-12 col-md-10 order-1 order-md-12">
+          <div class="col-12 col-md-10 order-1 order-md-12">
+            <div class="loupe-main"></div><!--.loupe-main-->
           </div>
-          <div class="loupe-nav col-12 col-md-2 order-12 order-md-1">
-          </div><!--.loupe-nav-->
+          <div class="col-12 col-md-2 order-12 order-md-1 p-0">
+            <div class="loupe-nav"></div><!--.loupe-nav-->
+          </div>
         </div><!--.d-flex-->        
       </div>
+      <div class="col-12 col-md-4 order-first order-md-last">
+        <h1 class="h6">Men’s Powder Keg™ Down Jacket</h1>
+      </div>      
     </div>
   </div>
   <div class="container pt-3">
     <div class="row">
       <div class="col">
         <h3>Filler content</h3>
+        <p>Test S7Viewer here:</p>
+        <div id="s7_videoview"></div>
         <p>Lorem ipsum dolor sit amet, et placerat corrumpit has. Et quo dicit maiestatis. Qui et quis vocent. Lorem feugait noluisse vim ut. Duo ea altera regione eleifend. Est nostro sapientem ad, vel et minim platonem salutandi, sumo postea eos cu.</p>
 
           <p>Et vis quod menandri temporibus, dico alia instructior sed ut, consul dissentiunt sea ei. Eu perfecto ocurreret pri. Id legere torquatos has. His facilisi conclusionemque ex.</p>
@@ -72,6 +75,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script> 
+  <script src="https://s7d2.scene7.com/s7viewers/html5/js/VideoViewer.js"></script> 
   <script src="app.js"></script> 
 </body>
 </html>

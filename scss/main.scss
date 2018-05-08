@@ -1,3 +1,8 @@
+$_loupe-color-light: #fff;
+$_loupe-color-dark: #777;
+$_loupe-color-border-selected: #999;
+
+/// Main loupe viewer styles
 .loupe {
   margin: 0;  // Reset margins
   background-position: 50% 50%;
@@ -5,70 +10,87 @@
   width: 100%;
   overflow: hidden;
   cursor: zoom-in;
-  border: solid 1px #fff;
-  outline: solid 1px #ccc;
-}
-.loupe .loupe__img {
-  transition: opacity .5s;
-  display: block;
-  width: 100%;
-}
-.loupe.active {
-  cursor: zoom-out;
-}
-.loupe.active .loupe__img {
-  opacity: 0;
+  border: solid 1px $_loupe-color-border-selected;
+  box-shadow: inset 0px 0px 0 1px $_loupe-color-light;
+
+  &.is-active {
+    cursor: zoom-out;
+
+    .loupe__img {
+      opacity: 0;
+    }      
+  }
+
+  &__slide { 
+    display: block;
+    height: auto;
+    width: 100%;
+    margin: 0 auto;
+
+    &--video {
+      height: 0;
+
+      // Make iframe for embedded video always full-width
+      & iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+      }
+    }
+  }
+
+  &__img {
+    transition: opacity .5s;
+    display: block;
+    width: 100%;
+  }
+
 }
 
-/* Slick Slide Modifications for viewer */  
-.loupe__slide { 
-display: block;
-height: auto;
-width: 100%;
-margin: 0 auto;
-}
-.slider-nav {
-display: block;
-width: 500px;
-padding: 20px;
-background:#eee;
-text-align: center;
-margin: 0 auto;
-}
-.slick-dots {
-position: relative;
-bottom: auto;
-}
-.slick-prev {
-left: 25px;
-}
-.slick-next {
-right: 25px;
+/// Loupe main: Slick slide overrides
+.loupe-main {
+  &.slick-slider {
+    margin-bottom: 0; // Slick default: 30px
+  }
 }
 
+/// Loupe navigation
 .loupe-nav {
+  $_loupe-nav-font-family-icon: 'Fontawesome';
+  $_loupe-nav-font-size-icon: 1rem;
+
   &__item {
     position: relative;
     height: 80px;
-    width: 80px;
-    border: solid 1px white;
-    margin: 10px;
+    width: 100%;
+    padding: 10px;
     overflow: hidden;
 
-    &--video::after {
-      display: block;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-family: "Fontawesome";
-      font-size: 1.5rem;
-      color: #fff;
-      content: "\f144"; //fa-play-circle-o
+    /// Navigation for video item
+    &--video {
+      overflow: hidden;
+
+      .loupe-nav__img {
+        height: 100%;
+      }
+      /// Overlay play button on video thumbnail
+      &::after {
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: $_loupe-nav-font-family-icon;
+        font-size: $_loupe-nav-font-size-icon;
+        color: $_loupe-color-light;
+        content: "\f144"; //fa-play-circle-o
+      }
     }
 
-    &.is-active {
-      outline: solid 1px black;
+    &.is-active, &.slick-current {
+        border: solid 1px $_loupe-color-border-selected;
+        box-shadow: inset 0px 0px 0 1px $_loupe-color-light;
     }
 
     @media (max-width: 767px) {
@@ -77,14 +99,21 @@ right: 25px;
       width: auto;
       text-align: center;
       background: none !important; // Remove image
-      border: none;
-      outline: none;
 
       &::after {
         content: "\f10c"; //fa-circle-o
-        font-family: "Fontawesome";
+        font-family: $_loupe-nav-font-family-icon;
+        color: $_loupe-color-dark;        
       }
+      &.is-active, &.slick-current {
+        border: none;
+        box-shadow: none;
 
+        &::after {
+          content: "\f111"; //fa-circle
+        }
+      }
+    
       &--video {
         position: relative;
         top: auto;
@@ -96,34 +125,95 @@ right: 25px;
           top: auto;
           left: auto;
           transform: none;
-          font-size: 1rem;
-          color: initial;          
+          font-size: $_loupe-nav-font-size-icon;
+          color: $_loupe-color-dark;
           content: "\f01d"; //fa-play-circle-o;
         }
 
-        &.is-active {
+        &.is-active, &.slick-current {
           &::after {
             content: "\f144"; //fa-play-circle
           }
-        }
-      }
-
-      &.is-active {
-        outline: none;
-
-        &::after {
-          content: "\f111"; //fa-circle
         }
       }
     }
   }
 
   &__img {
-    height: 100%; // Account for images that are not the correct aspect ratio
+    width: 100%; // Account for images that are not the correct aspect ratio
 
     // Hide thumbnail images on mobile
     @media (max-width: 767px) {
       display: none !important; // override Slick defaults 
     }
   }
+
+  // Turn off focus outline for all nav links
+  & *:focus {
+    outline: none;
+  }
+
+  // Override slick control styles
+  .slick-prev {
+    position: relative;
+    margin: 0 auto;
+    top: 0;
+    left: 0;
+
+    @media (max-width: 767px) {
+      position: absolute;
+      top: 50%;
+      left: 15px;
+    }
+    
+    &::before {
+      height: $_loupe-nav-font-size-icon;
+      font-family: $_loupe-nav-font-family-icon;
+      font-size: $_loupe-nav-font-size-icon;
+      color: $_loupe-color-dark;
+      content: '\f077'; //fa-chevron-up
+
+      @media (max-width: 767px) {
+        display: none;
+        // content: '\f053'; //fa-chevron-left
+      }
+    }
+  }
+  .slick-next {
+    position: relative;
+    margin: 0 auto;
+    top: 100%;
+    right: 0;
+
+    @media (max-width: 767px) {
+      position: absolute;
+      top: 50%;
+      right: 15px;    
+    }
+    
+    &::before {
+      height: $_loupe-nav-font-size-icon;
+      font-family: $_loupe-nav-font-family-icon;
+      font-size: $_loupe-nav-font-size-icon;
+      color: $_loupe-color-dark;
+      content: '\f078'; //fa-chevron-down
+
+      @media (max-width: 767px) {
+        display: none;
+        // content: '\f054'; //fa-chevron-right
+      }
+    }
+  }
+  
+  // Shrink width of navigation on tablet + mobile
+  @media (max-width: 767px) {
+    width: 50%;
+    margin: 0 auto;  
+  }
+}
+
+/// TODO: See if there's a way to refactor Scene7 video viewer template
+#s7_videoview.s7videoviewer {
+  width:100%;
+  height:auto;
 }
