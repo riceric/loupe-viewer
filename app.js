@@ -67,6 +67,9 @@ var Loupe = (function() {
     var loadCarouselViewers = function(imgData, slidesSelector, navSelector) {
         var $slides = $(slidesSelector);
         var $nav = $(navSelector);
+        var $videoSlide = $('.loupe__slide--video');
+        var scrollOnDesktop = true; // Placeholder for MHW / SOR functionality
+        var player; // iframe containing video player
 
         /* TODO: Figure out where to store default N/A image */
         var imgNA = "/on/demandware.static/Sites-Columbia_US-Site/-/default/dw3ad2cfbf/images/noimagelarge.png";
@@ -78,24 +81,47 @@ var Loupe = (function() {
             $slides.append(slide);
             $nav.append(navSlide);
         }
-        for (var j in imgData["videos"]) {
-            /* TODO: Where should I get the video thumbnail? */
-            // Append video slide to main carousel and nav carousel
-            $slides.append("<div class='loupe__slide loupe__slide--video'><img src='https://img.youtube.com/vi/"+ imgData["videos"][j] +"/hqdefault.jpg' /></div>");
-            $nav.append("<div class='loupe-nav__item loupe-nav__item--video'><img src='https://img.youtube.com/vi/"+ imgData["videos"][j] +"/hqdefault.jpg' class='loupe-nav__img' /></div>")
+        // Append video slide to main carousel and nav carousel, 
+        if (imgData["video"].data != '') {
+            if (imgData["video"].host == 'youtube') {
+                $slides.append("<div class='loupe__slide loupe__slide--video'><img src='https://img.youtube.com/vi/"+ imgData["video"].data +"/hqdefault.jpg' /></div>");
+                $nav.append("<div class='loupe-nav__item loupe-nav__item--video'><img src='https://img.youtube.com/vi/"+ imgData["video"].data +"/hqdefault.jpg' class='loupe-nav__img' /></div>")
+            }
+            if (imgData["video"].host == 'vimeo') {
+                // A Vimeo API call is required to get the thumbnail URL
+                var vimeoID = imgData["video"].data;
+
+                $.getJSON('https://www.vimeo.com/api/v2/video/' + vimeoID + '.json?callback=?', {format: "json"}, function(data) {
+                    $(".thumbs").attr('src', data[0].thumbnail_large);
+                    $slides.append("<div class='loupe__slide loupe__slide--video'><img src='https://i.vimeocdn.com/video/"+ data[0].thumbnail_large +"' /></div>");
+                    $nav.append("<div class='loupe-nav__item loupe-nav__item--video'><img src='https://i.vimeocdn.com/video/"+ data[0].thumbnail_large +"' class='loupe-nav__img' /></div>")        
+                });
+            }
+            if (imgData["video"].host == 'scene7') {
+                $slides.append("<div class='loupe__slide loupe__slide--video'><img src='https://i.vimeocdn.com/video/"+ imgData["video"].data +"_640.jpg' /></div>");
+                $nav.append("<div class='loupe-nav__item loupe-nav__item--video'><img src='https://i.vimeocdn.com/video/"+ imgData["video"].data +"_640.jpg' class='loupe-nav__img' /></div>")
+            }            
         }
 
         // Init video viewer (draft)
-        $('.loupe-nav__item--video').on('click', loadYouTubeVideo);
+        $('.loupe-nav__item--video').on('click', function() {
+            console.log('Video slide clicked...');
+            // If video is already loaded, just play video
+            if ($videoSlide.find('#loupe-video').length < 1) {
+                console.log('YT video not found. Loading now...');
+                loadYouTubeVideo();
+            }
+        });
 
         // Requires slick.js to be loaded
         $slides.slick({
+            mobileFirst: true,
             slidesToShow: 1,
             slidesToScroll: 1,
             arrows: false,
             fade: true,
             swipe: true,
-            asNavFor: navSelector
+            asNavFor: navSelector,
         });
         $nav.slick({
             mobileFirst: true,
@@ -123,6 +149,9 @@ var Loupe = (function() {
 
     /**
      * Load YouTube video
+     * @param {String} videoID YouTube Video ID
+     * @param {Object} target Target DOM element
+     * @return void
      */
     var loadYouTubeVideo = function() {
         var scriptURL = "https://www.youtube.com/iframe_api";
@@ -130,14 +159,18 @@ var Loupe = (function() {
         var height = 576;
         var siteURL = 'columbia.com';
         var videoID = 's6Ine_o2lLM';
-        var videoHTML = '<iframe id="player" type="text/html" ' +
+        var videoHTML = '<iframe id="loupe-video" type="text/html" ' +
                             'width="'+ width +'" height="'+ height +'" ' +
                             'src="http://www.youtube.com/embed/'+ videoID +
-                            '?color=white &rel=0&showinfo=0&origin='+ siteURL +'&enablejsapi=1" ' +
+                            '?color=white&rel=0&showinfo=0&enablejsapi=1" ' +
                             'frameborder="0">' + 
                         '</iframe>';
         var $target = $('.loupe__slide--video');
-        
+  
+        console.log('loadYouTubeVideo: adding iframe to the DOM...')
+        // Load video into slide
+        $target.html(videoHTML);
+
         // Use API with existing YouTube player
         // Only load YouTube script if it is not found
         // Loads the YouTube IFrame Player API code asynchronously.
@@ -147,43 +180,6 @@ var Loupe = (function() {
             var firstScriptTag = document.getElementsByTagName('script')[0];
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
         }
-
-        // Use API with existing YouTube player
-        var player;
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                events: {
-                    'onError': onError,
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        }
-
-        // The API will call this function when the video player is ready.
-        function onPlayerReady(event) {
-            event.target.playVideo();
-        }
-
-        function onPlayerStateChange(event) {
-            // Define behavior for when 
-        }
-
-        function onError(event) {
-            // Define error bevavior
-        }
-
-        // Load the IFrame Player API code asynchronously.
-        console.log ('loading YouTube video...');
-        // Hide img currently in focus
-        $('.loupe__slide--video.loupe__img').hide();
-        $target.html(videoHTML);
-        
-        // Pause videos when they lose focus
-        $target.on('blur', function(){
-            $(this).pauseVideo();
-        });
-        
         return false;
     }
 
@@ -229,7 +225,6 @@ var Loupe = (function() {
     return {
         magnify: magnify,
         loadCarouselViewers: loadCarouselViewers,
-        loadS7Video: loadS7Video
     };
 
 })();
@@ -242,21 +237,33 @@ $(function() {
         * alt text?
         * type, eg. _f, _b, a1, a2, a3, video?
     */
-   var imgData = {
+    var imgData = {
         "images": [
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_f",
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_b",
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a1",
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2",
         ],
-        "videos": [
-            "s6Ine_o2lLM"
+        "video": {
+          "data": "tu2-xbn2Zjc",
+          "host": "youtube"
+        }
+    };
+    var imgData_vimeo = {
+        "images": [
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_f",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_b",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a1",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2",
         ],
-        "videoHost": "youtube"
+        "video": {
+          "data": "61227076",
+          "host": "vimeo"
+        }
     };
 
     // Load images for selected product variant
-    Loupe.loadCarouselViewers( imgData, '.loupe-main', '.loupe-nav');
+    Loupe.loadCarouselViewers( imgData_vimeo, '.loupe-main', '.loupe-nav');
     // Initiate loupe mode on image
     Loupe.magnify( '.loupe' );
 
@@ -264,3 +271,32 @@ $(function() {
     Loupe.loadS7Video();
 
 });
+
+/* TODO: Moving out of Loupe due to scope issues */
+// Use API with existing YouTube player
+var player;
+var onYouTubeIframeAPIReady = function() {
+    player = new YT.Player('loupe-video', {
+        events: {
+            'onReady': onPlayerReady,
+        }
+    });
+}
+
+// The API will call this function when the video player is ready.
+var onPlayerReady = function(event) {
+    // Setup click event that can pause videos when the iframe loses "focus"
+    console.log('YT onReady state detected...');
+    $('.loupe-nav__item').not('.loupe-nav__item--video')
+        .on('click', function(){
+            player.pauseVideo();
+            console.log('Pausing video...');
+    });
+
+    $('.loupe-nav__item--video')
+        .off('click', '**')
+        .on('click', function() {
+            player.playVideo();
+            console.log('Resuming playback...')
+    });
+}

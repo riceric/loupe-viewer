@@ -60,6 +60,9 @@ $_loupe-color-border-selected: #999;
   $_loupe-nav-font-family-icon: 'Fontawesome';
   $_loupe-nav-font-size-icon: 1rem;
 
+  .slick-list {
+    height: auto !important; // Fix height bug
+  }
   &__item {
     position: relative;
     height: 80px;
