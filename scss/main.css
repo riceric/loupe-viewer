@@ -16,13 +16,11 @@
     height: auto;
     width: 100%;
     margin: 0 auto; }
-    .loupe__slide--video {
-      height: 0; }
-      .loupe__slide--video iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%; }
+    .loupe__slide--video iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%; }
   .loupe__img {
     transition: opacity .5s;
     display: block;
@@ -30,7 +28,13 @@
 
 .loupe-main.slick-slider {
   margin-bottom: 0; }
+.loupe-main #loupe-viewer_videoPlayer.s7videoplayer div:focus {
+  outline: none; }
+.loupe-main div#loupe-viewer_controls.s7controlbar {
+  display: none; }
 
+.loupe-nav .slick-list {
+  height: auto !important; }
 .loupe-nav__item {
   position: relative;
   height: 80px;

@@ -28,7 +28,7 @@ $_loupe-color-border-selected: #999;
     margin: 0 auto;
 
     &--video {
-      height: 0;
+      // height: 0;
 
       // Make iframe for embedded video always full-width
       & iframe {
@@ -45,13 +45,26 @@ $_loupe-color-border-selected: #999;
     display: block;
     width: 100%;
   }
-
 }
 
-/// Loupe main: Slick slide overrides
 .loupe-main {
+  /// Loupe main: Slick slide overrides
   &.slick-slider {
     margin-bottom: 0; // Slick default: 30px
+  }
+  
+  /// S7 viewer Overrides
+  #loupe-viewer_videoPlayer.s7videoplayer {
+    div {
+      &:focus {
+        outline: none;  // Disable glowing blue outline
+      }
+    }
+  }
+  div#loupe-viewer_controls {    
+    &.s7controlbar {
+      display: none;
+    }
   }
 }
 
