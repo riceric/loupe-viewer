@@ -118,6 +118,11 @@ var Loupe = (function(settings) {
         $slides.slick(config.viewerCarouselOptions);
         $nav.slick(config.navCarouselOptions);
 
+        // Fix bug where navigation position incorrectly renders when resizing window
+        $(window).resize(function(){
+            $nav.slick('reinit');
+        })
+
         // Setup carousel slides
         for (var i in imgData['images']) {
             $slides.slick('slickAdd','<div class="loupe__slide"><figure class="loupe" data-lgimg="' + imgData.images[i] + dimParamHQ + '"><div id="loupe__lens"><img src="' + imgData.images[i] + dimParamDefault + '" class="loupe__img"></div></figure></div>');
@@ -171,7 +176,6 @@ var Loupe = (function(settings) {
      * @return void
      */
     var loadYouTubeVideo = function(videoID) {
-        console.log("loadYouTubeVideo...");
         var scriptURL = 'https://www.youtube.com/iframe_api';
         var width = 1024;
         var height = 576;
@@ -263,7 +267,6 @@ var Loupe = (function(settings) {
         // Only load Scene7 script if it is not found
         // Loads the Scene7 IFrame Player API code asynchronously.
         if (typeof s7_videoview == 'undefined') {
-            console.log("s7VideoViewer not found...");
             var tag = document.createElement('script');
             var firstScriptTag = document.getElementsByTagName('script')[0];
 
@@ -272,7 +275,6 @@ var Loupe = (function(settings) {
 
             // Initiate viewer once script is loaded
             tag.onload = function() {
-                console.log("Init new s7VideoViewer...");
                 var s7_videoview = new s7viewers.VideoViewer({
                     "containerId" : "loupe-viewer",
                     "params" : {
@@ -388,7 +390,7 @@ $(function() {
     };
 
     // Load images for selected product variant
-    Loupe.loadCarouselViewers( imgData_vimeo, '.loupe-main', '.loupe-nav');
+    Loupe.loadCarouselViewers( imgData, '.loupe-main', '.loupe-nav');
     // Initiate loupe mode on image
     Loupe.magnify( '.loupe' );
 });
