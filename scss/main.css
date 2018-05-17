@@ -4,9 +4,7 @@
   position: relative;
   width: 100%;
   overflow: hidden;
-  cursor: zoom-in;
-  border: solid 1px #999;
-  box-shadow: inset 0px 0px 0 1px #fff; }
+  cursor: zoom-in; }
   .loupe.is-active {
     cursor: zoom-out; }
     .loupe.is-active .loupe__img {
@@ -16,18 +14,30 @@
     height: auto;
     width: 100%;
     margin: 0 auto; }
-    .loupe__slide--video iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%; }
   .loupe__img {
     transition: opacity .5s;
     display: block;
     width: 100%; }
 
+.embed-responsive--16-9 {
+  position: relative;
+  height: 675px; }
+  .embed-responsive--16-9 iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; }
+
 .loupe-main.slick-slider {
   margin-bottom: 0; }
+.loupe-main #loupe-viewer.s7videoviewer {
+  height: 675px; }
+.loupe-main #loupe-viewer_container.s7videoviewer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); }
 .loupe-main #loupe-viewer_videoPlayer.s7videoplayer div:focus {
   outline: none; }
 .loupe-main div#loupe-viewer_controls.s7controlbar {

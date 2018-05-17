@@ -10,8 +10,6 @@ $_loupe-color-border-selected: #999;
   width: 100%;
   overflow: hidden;
   cursor: zoom-in;
-  border: solid 1px $_loupe-color-border-selected;
-  box-shadow: inset 0px 0px 0 1px $_loupe-color-light;
 
   &.is-active {
     cursor: zoom-out;
@@ -27,23 +25,28 @@ $_loupe-color-border-selected: #999;
     width: 100%;
     margin: 0 auto;
 
-    &--video {
-      // height: 0;
-
-      // Make iframe for embedded video always full-width
-      & iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-      }
-    }
+    &--video {}
   }
 
   &__img {
     transition: opacity .5s;
     display: block;
     width: 100%;
+  }
+}
+
+/// Container for third-party videos
+.embed-responsive--16-9 {
+  position: relative;
+  height: 675px;
+
+  // Make iframe for embedded video always full-width
+  & iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
   }
 }
 
@@ -54,6 +57,18 @@ $_loupe-color-border-selected: #999;
   }
   
   /// S7 viewer Overrides
+  #loupe-viewer.s7videoviewer {
+    height: 675px;
+  }
+
+  #loupe-viewer_container.s7videoviewer {
+    // Center within #loupe-viewer
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
   #loupe-viewer_videoPlayer.s7videoplayer {
     div {
       &:focus {
@@ -61,6 +76,7 @@ $_loupe-color-border-selected: #999;
       }
     }
   }
+  
   div#loupe-viewer_controls {    
     &.s7controlbar {
       display: none;
