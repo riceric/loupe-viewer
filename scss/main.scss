@@ -1,6 +1,11 @@
+$mobile-max-width: 767px;
+$tablet-max-width: 1023px;
+
 $_loupe-color-light: #fff;
 $_loupe-color-dark: #777;
 $_loupe-color-border-selected: #999;
+$_loupe-mobile-slide-height: 425px;
+$_loupe-desktop-slide-height: 675px;
 
 /// Main loupe viewer styles
 .loupe {
@@ -38,7 +43,11 @@ $_loupe-color-border-selected: #999;
 /// Container for third-party videos
 .embed-responsive--16-9 {
   position: relative;
-  height: 675px;
+  height: $_loupe-desktop-slide-height;
+
+  @media (max-width: $mobile-max-width) {
+    height: $_loupe-mobile-slide-height;
+  }
 
   // Make iframe for embedded video always full-width
   & iframe {
@@ -58,7 +67,7 @@ $_loupe-color-border-selected: #999;
   
   /// S7 viewer Overrides
   #loupe-viewer.s7videoviewer {
-    height: 675px;
+    height: $_loupe-desktop-slide-height;
   }
 
   #loupe-viewer_container.s7videoviewer {
@@ -89,13 +98,10 @@ $_loupe-color-border-selected: #999;
   $_loupe-nav-font-family-icon: 'Fontawesome';
   $_loupe-nav-font-size-icon: 1rem;
 
-  .slick-list {
-    height: auto !important; // Fix height bug
-  }
   &__item {
     position: relative;
     height: 80px;
-    width: 100%;
+    max-width: 100%; // Prevents border from 'disappearing' on resize
     padding: 10px;
     overflow: hidden;
 
@@ -121,11 +127,11 @@ $_loupe-color-border-selected: #999;
     }
 
     &.is-active, &.slick-current {
-        border: solid 1px $_loupe-color-border-selected;
-        box-shadow: inset 0px 0px 0 1px $_loupe-color-light;
+      border: solid 1px $_loupe-color-border-selected;
+      box-shadow: inset 0px 0px 0 1px $_loupe-color-light;
     }
 
-    @media (max-width: 767px) {
+    @media (max-width: $tablet-max-width) {
       display: inline-block;
       height: auto;
       width: auto;
@@ -137,6 +143,7 @@ $_loupe-color-border-selected: #999;
         font-family: $_loupe-nav-font-family-icon;
         color: $_loupe-color-dark;        
       }
+
       &.is-active, &.slick-current {
         border: none;
         box-shadow: none;
@@ -175,7 +182,7 @@ $_loupe-color-border-selected: #999;
     width: 100%; // Account for images that are not the correct aspect ratio
 
     // Hide thumbnail images on mobile
-    @media (max-width: 767px) {
+    @media (max-width: $tablet-max-width) {
       display: none !important; // override Slick defaults 
     }
   }
@@ -184,15 +191,25 @@ $_loupe-color-border-selected: #999;
   & *:focus {
     outline: none;
   }
+  
+  // Shrink width of navigation on tablet + mobile
+  @media (max-width: $tablet-max-width) {
+    width: 50%;
+    margin: 0 auto;  
+  }
 
   // Override slick control styles
+  .slick-list {
+    height: auto !important; // Fix height bug
+  }
+
   .slick-prev {
     position: relative;
     margin: 0 auto;
     top: 0;
     left: 0;
 
-    @media (max-width: 767px) {
+    @media (max-width: $tablet-max-width) {
       position: absolute;
       top: 50%;
       left: 15px;
@@ -205,19 +222,20 @@ $_loupe-color-border-selected: #999;
       color: $_loupe-color-dark;
       content: '\f077'; //fa-chevron-up
 
-      @media (max-width: 767px) {
+      @media (max-width: $tablet-max-width) {
         display: none;
         // content: '\f053'; //fa-chevron-left
       }
     }
   }
+  
   .slick-next {
     position: relative;
     margin: 0 auto;
     top: 100%;
     right: 0;
 
-    @media (max-width: 767px) {
+    @media (max-width: $tablet-max-width) {
       position: absolute;
       top: 50%;
       right: 15px;    
@@ -230,17 +248,11 @@ $_loupe-color-border-selected: #999;
       color: $_loupe-color-dark;
       content: '\f078'; //fa-chevron-down
 
-      @media (max-width: 767px) {
+      @media (max-width: $tablet-max-width) {
         display: none;
         // content: '\f054'; //fa-chevron-right
       }
     }
-  }
-  
-  // Shrink width of navigation on tablet + mobile
-  @media (max-width: 767px) {
-    width: 50%;
-    margin: 0 auto;  
   }
 }
 

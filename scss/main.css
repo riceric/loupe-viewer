@@ -22,6 +22,9 @@
 .embed-responsive--16-9 {
   position: relative;
   height: 675px; }
+  @media (max-width: 767px) {
+    .embed-responsive--16-9 {
+      height: 425px; } }
   .embed-responsive--16-9 iframe {
     position: absolute;
     top: 0;
@@ -43,12 +46,10 @@
 .loupe-main div#loupe-viewer_controls.s7controlbar {
   display: none; }
 
-.loupe-nav .slick-list {
-  height: auto !important; }
 .loupe-nav__item {
   position: relative;
   height: 80px;
-  width: 100%;
+  max-width: 100%;
   padding: 10px;
   overflow: hidden; }
   .loupe-nav__item--video {
@@ -68,7 +69,7 @@
   .loupe-nav__item.is-active, .loupe-nav__item.slick-current {
     border: solid 1px #999;
     box-shadow: inset 0px 0px 0 1px #fff; }
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     .loupe-nav__item {
       display: inline-block;
       height: auto;
@@ -101,17 +102,23 @@
           content: "\f144"; } }
 .loupe-nav__img {
   width: 100%; }
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     .loupe-nav__img {
       display: none !important; } }
 .loupe-nav *:focus {
   outline: none; }
+@media (max-width: 1023px) {
+  .loupe-nav {
+    width: 50%;
+    margin: 0 auto; } }
+.loupe-nav .slick-list {
+  height: auto !important; }
 .loupe-nav .slick-prev {
   position: relative;
   margin: 0 auto;
   top: 0;
   left: 0; }
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     .loupe-nav .slick-prev {
       position: absolute;
       top: 50%;
@@ -122,7 +129,7 @@
     font-size: 1rem;
     color: #777;
     content: '\f077'; }
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       .loupe-nav .slick-prev::before {
         display: none; } }
 .loupe-nav .slick-next {
@@ -130,7 +137,7 @@
   margin: 0 auto;
   top: 100%;
   right: 0; }
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     .loupe-nav .slick-next {
       position: absolute;
       top: 50%;
@@ -141,13 +148,9 @@
     font-size: 1rem;
     color: #777;
     content: '\f078'; }
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       .loupe-nav .slick-next::before {
         display: none; } }
-@media (max-width: 767px) {
-  .loupe-nav {
-    width: 50%;
-    margin: 0 auto; } }
 
 #s7_videoview.s7videoviewer {
   width: 100%;

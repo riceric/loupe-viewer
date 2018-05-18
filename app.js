@@ -6,66 +6,70 @@
 /* TODO: 
     1. Figure out where to store default N/A image 
        var imgNA = "/on/demandware.static/Sites-Columbia_US-Site/-/default/dw3ad2cfbf/images/noimagelarge.png";
-    2. Fix bug where resize causes thumbnail nav to break
     3. Add options for dimensions and key selectors
-    4. Add options for nav slick slide configuration
-    5. Add options for viewer slick slide configuration
 */
-;(function($) {
-
-})
-var Loupe = (function(settings) {
-    // Module settings
+var Loupe = (function() {
     var _ = this;
 
-    _.defaults = {
-        maxMobileWidth: 767,
-        defaultWidth: 675,
-        defaultHeight: 675,
-        hqWidth: 1280,
-        hqHeight: 1280,
-        navContainer: '.loupe-nav',
-        slideContainer: '.loupe-main',
-        videoSelector: '.loupe__slide--video',
-        navItemSelector: '.loupe-nav__item',
-        navVideoSelector: '.loupe-nav__item--video',
-        viewerCarouselOptions: {
-            mobileFirst: true,
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            arrows: false,
-            fade: true,
-            swipe: true,
-            asNavFor: '.loupe-nav', // TODO: Make this configurable
-        },
-        navCarouselOptions: {
-            mobileFirst: true,
-            slidesToShow: 6,
-            focusOnSelect: true,
-            swipe: true,
-            vertical: false,
-            verticalSwiping: false,
-            asNavFor: '.loupe-main',    // TODO: Make this configurable
-            infinite: false,
+    init = function(settings, imgJson) {
+        // Module defaults
+        _.defaults = {
+            maxTabletWidth: 1023,
+            defaultWidth: 675,
+            defaultHeight: 675,
+            hqWidth: 1280,
+            hqHeight: 1280,
+            loupeSelector: '.loupe',
+            navContainer: '.loupe-nav',
+            slideContainer: '.loupe-main',
+            videoSelector: '.loupe__slide--video',
+            navItemSelector: '.loupe-nav__item',
+            navVideoSelector: '.loupe-nav__item--video',
+            viewerCarouselOptions: {
+                mobileFirst: true,
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                arrows: false,
+                fade: true,
+                swipe: true,
+                asNavFor: '.loupe-nav', // TODO: Make this configurable
+            },
+            navCarouselOptions: {
+                mobileFirst: true,
+                slidesToShow: 6,
+                focusOnSelect: true,
+                swipe: true,
+                vertical: false,
+                verticalSwiping: false,
+                asNavFor: '.loupe-main',    // TODO: Make this configurable
+                infinite: false,
 
-            responsive: [
-                {
-                    breakpoint: 767,
-                    settings: {
-                        centerMode: false,
-                        focusOnSelect: true,
-                        vertical: true,
-                        verticalSwiping: true,
+                responsive: [
+                    {
+                        breakpoint: 1024,
+                        settings: {
+                            centerMode: false,
+                            focusOnSelect: true,
+                            vertical: true,
+                            verticalSwiping: true,
+                        }
                     }
-                }
-            ]
+                ]
+            }
         }
-    }
-    _.config = $.extend(_, _.defaults, settings);
 
-    /* TODO figure out how to store Scene7 parameters */
-    var dimParamDefault = '?wid='+config.defaultWidth+'&hei='+config.defaultHeight;
-    var dimParamHQ = '?wid='+config.hqWidth+'&hei='+config.hqHeight;
+        // Setup configuration, accounting for any override settings
+        _.config = $.extend(_, _.defaults, settings);
+
+        // Setup default S7 image parameters
+        _.dimParamDefault = '?wid='+config.defaultWidth+'&hei='+config.defaultHeight;
+        _.dimParamHQ = '?wid='+config.hqWidth+'&hei='+config.hqHeight;
+
+        // Load images for selected product variant
+        loadCarouselViewers(imgJson);
+        // Initiate loupe mode on image
+        magnify(config.loupeSelector);
+    };
 
     /**
      * Activate 'magnifying glass' effect.
@@ -101,13 +105,10 @@ var Loupe = (function(settings) {
      * Load carousel with image viewers; Sets up two carousels: 1) Main images 2) Navigation for images
      * @access public
      * @param {String} imgData JSON data containing image URLs
-     * @param {String} slidesSelector Selector that contains carousel slickjs slides
-     * @param {String} navSelector Selector that contains carousel slickjs nav
-     *
      */
-    var loadCarouselViewers = function(imgData, slidesSelector, navSelector) {
-        var $slides = $(slidesSelector);
-        var $nav = $(navSelector);
+    var loadCarouselViewers = function(imgData) {
+        var $slides = $(config.slideContainer);
+        var $nav = $(config.navContainer);
         var $navItemVid = $(config.navVideoSelector);
         var $videoSlide = $(config.videoSelector);
         var videoID = imgData['video'].data;
@@ -128,7 +129,8 @@ var Loupe = (function(settings) {
             $slides.slick('slickAdd','<div class="loupe__slide"><figure class="loupe" data-lgimg="' + imgData.images[i] + dimParamHQ + '"><div id="loupe__lens"><img src="' + imgData.images[i] + dimParamDefault + '" class="loupe__img"></div></figure></div>');
             $nav.slick('slickAdd','<div class="loupe-nav__item"><img src="'+ imgData.images[i] + dimParamDefault + '" class="loupe-nav__img" /></div>');
         }
-        // Append video slide to main carousel and nav carousel,
+        // Append video slide to main carousel and nav carousel
+        // TODO: Optimize this block to be more DRY
         if (videoID != '') {
             if (imgData['video'].host == 'youtube') {
                 $slides.slick('slickAdd','<div class="loupe__slide loupe__slide--video"><div class="embed-responsive--16-9"><img src="https://img.youtube.com/vi/'+ videoID +'/hqdefault.jpg" /></div></div>');
@@ -177,8 +179,8 @@ var Loupe = (function(settings) {
      */
     var loadYouTubeVideo = function(videoID) {
         var scriptURL = 'https://www.youtube.com/iframe_api';
-        var width = 1024;
-        var height = 576;
+        var width = config.defaultWidth;
+        var height = config.defaultHeight;
         var videoHTML = '<iframe id="loupe-video" type="text/html" ' +
                             'width="'+ width +'" height="'+ height +'" ' +
                             'src="http://www.youtube.com/embed/'+ videoID +
@@ -208,7 +210,7 @@ var Loupe = (function(settings) {
      */
     var loadVimeoVideo = function(videoID) {
         var scriptURL = 'https://player.vimeo.com/api/player.js';
-        var width = 1024;
+        var width = config.defaultWidth;
         var $navItem = $(config.navItemSelector);
         var $navItemVideo = $(config.navVideoSelector);
         var $target = $('.embed-responsive--16-9');
@@ -311,6 +313,7 @@ var Loupe = (function(settings) {
     }
 
     return {
+        init: init,
         magnify: magnify,
         loadCarouselViewers: loadCarouselViewers,
     };
@@ -389,8 +392,10 @@ $(function() {
         }
     };
 
-    // Load images for selected product variant
-    Loupe.loadCarouselViewers( imgData, '.loupe-main', '.loupe-nav');
-    // Initiate loupe mode on image
-    Loupe.magnify( '.loupe' );
+    console.log('OK, loading json:' + imgData);
+    Loupe.init({
+            defaultWidth: 400,
+            defaultHeight: 420,
+        },
+        imgData);
 });
