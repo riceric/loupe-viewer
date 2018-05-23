@@ -30,6 +30,7 @@ var Loupe = (function() {
                 slidesToShow: 1,
                 slidesToScroll: 1,
                 arrows: false,
+                dots: true,
                 fade: true,
                 swipe: true,
                 asNavFor: '.loupe-nav', // TODO: Make this configurable
@@ -48,8 +49,9 @@ var Loupe = (function() {
                     {
                         breakpoint: 1024,
                         settings: {
-                            centerMode: false,
+                            centerMode: true,
                             focusOnSelect: true,
+                            slidesToShow: 6,
                             vertical: true,
                             verticalSwiping: true,
                         }
@@ -112,17 +114,37 @@ var Loupe = (function() {
         var $navItemVid = $(config.navVideoSelector);
         var $videoSlide = $(config.videoSelector);
         var videoID = imgData['video'].data;
+        // numSlides: Hardcoding 1 for video until support is added for multiple videos
+        var numSlides = Object.keys(imgData.images).length + 1;
+        // Maximum slides to show in mobile navigation
+        var maxSlides = 7; 
 
         var scrollOnDesktop = true; // Placeholder for MHW / SOR functionality
         var player; // iframe containing video player
 
-        $slides.slick(config.viewerCarouselOptions);
-        $nav.slick(config.navCarouselOptions);
+        // Load slick sliders only if slick hasn't already been initialized
+        $slides.not('.slick-initialized').slick(config.viewerCarouselOptions);
+        $nav.not('.slick-initialized').slick(config.navCarouselOptions);
+
+        // Remove all slides from any existing slides
+        if ($slides.is('.slick-initialized')) {
+            $slides.slick('slickRemove', null, null, true);
+        }
+        if ($nav.is('.slick-initialized')) {
+            $nav.slick('slickRemove', null, null, true);
+        }
 
         // Fix bug where navigation position incorrectly renders when resizing window
         $(window).resize(function(){
             $nav.slick('reinit');
         })
+
+        // Re-center slides based on how many slides should show
+        if (numSlides > maxSlides) {
+            $nav.slick('setOption', {slidesToShow: maxSlides}, true);
+        } else {
+            $nav.slick('setOption', {slidesToShow: numSlides}, true);
+        }
 
         // Setup carousel slides
         for (var i in imgData['images']) {
@@ -201,6 +223,31 @@ var Loupe = (function() {
             tag.src = scriptURL;
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
         }
+
+        // Use API with existing YouTube player
+        window.onYouTubeIframeAPIReady = function() {
+            window.YTPlayer = new YT.Player('loupe-video', {
+                events: {
+                    'onReady': onPlayerReady,
+                }
+            });
+        }
+
+        // The API will call this function when the video player is ready.
+        window.onPlayerReady = function(event) {
+            // Setup click event that can pause videos when the iframe loses "focus"
+            $('.loupe-nav__item').not('.loupe-nav__item--video')
+                .on('click', function(){
+                    YTPlayer.pauseVideo();
+            });
+
+            $('.loupe-nav__item--video')
+                .off('click.togglePlayback')
+                .on('click', function() {
+                    YTPlayer.playVideo();
+            });
+        }
+
         return false;
     }
 
@@ -233,7 +280,7 @@ var Loupe = (function() {
 
                 // Create vimeo player
                 var vimeoPlayer = new Vimeo.Player($target, videoOptions);
-                
+
                 // Click on non-video nav item to pause
                 $(config.navItemSelector).not(config.navVideoSelector)
                 .on('click', function(){
@@ -320,33 +367,6 @@ var Loupe = (function() {
 
 })();
 
-/* ########## YouTube API ########### */
-/* TODO: Moving out of Loupe due to scope issues */
-// Use API with existing YouTube player
-var YTPlayer;
-var onYouTubeIframeAPIReady = function() {
-    YTPlayer = new YT.Player('loupe-video', {
-        events: {
-            'onReady': onPlayerReady,
-        }
-    });
-}
-
-// The API will call this function when the video player is ready.
-var onPlayerReady = function(event) {
-    // Setup click event that can pause videos when the iframe loses "focus"
-    $('.loupe-nav__item').not('.loupe-nav__item--video')
-        .on('click', function(){
-            YTPlayer.pauseVideo();
-    });
-
-    $('.loupe-nav__item--video')
-        .off('click.togglePlayback')
-        .on('click', function() {
-            YTPlayer.playVideo();
-    });
-}
-
 /* ########## INITIALIZATION ########## */
 $(function() {
     /* Placeholder for JSON data that should come from PDP variant
@@ -369,9 +389,7 @@ $(function() {
     };
     var imgData_vimeo = {
         "images": [
-            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_f",
-            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_b",
-            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a1",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_351_f",
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2",
         ],
         "video": {
@@ -381,9 +399,15 @@ $(function() {
     };
     var imgData_s7 = {
         "images": [
-            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_f",
-            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_b",
-            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a1",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_f",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_b",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_a1",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_f",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_b",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_a1",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_f",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_b",
+            "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_a1",
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2",
         ],
         "video": {
@@ -392,10 +416,25 @@ $(function() {
         }
     };
 
-    console.log('OK, loading json:' + imgData);
-    Loupe.init({
+    $('.swatch1').on('click', function(){
+        Loupe.init({
             defaultWidth: 400,
             defaultHeight: 420,
         },
         imgData);
+    });
+    $('.swatch2').on('click', function(){
+        Loupe.init({
+            defaultWidth: 400,
+            defaultHeight: 420,
+        },
+        imgData_vimeo);
+    });
+    $('.swatch3').on('click', function(){
+        Loupe.init({
+            defaultWidth: 400,
+            defaultHeight: 420,
+        },
+        imgData_s7);
+    });
 });
