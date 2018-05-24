@@ -1,38 +1,33 @@
 $mobile-max-width: 767px;
 $tablet-max-width: 1023px;
-
 $_loupe-color-light: #fff;
 $_loupe-color-dark: #777;
 $_loupe-color-border-selected: #999;
 $_loupe-mobile-slide-height: 425px;
 $_loupe-desktop-slide-height: 675px;
-
+$_loupe-nav-font-family-icon: 'Fontawesome';
+$_loupe-nav-font-size-icon: 1rem;
 /// Main loupe viewer styles
 .loupe {
-  margin: 0;  // Reset margins
+  margin: 0; // Reset margins
   background-position: 50% 50%;
   position: relative;
   width: 100%;
   overflow: hidden;
   cursor: zoom-in;
-
   &.is-active {
     cursor: zoom-out;
-
     .loupe__img {
       opacity: 0;
-    }      
+    }
   }
-
-  &__slide { 
+  &__slide {
     display: block;
     height: auto;
     width: 100%;
     margin: 0 auto;
-
     &--video {}
   }
-
   &__img {
     transition: opacity .5s;
     display: block;
@@ -44,12 +39,9 @@ $_loupe-desktop-slide-height: 675px;
 .embed-responsive--16-9 {
   position: relative;
   height: $_loupe-desktop-slide-height;
-
   @media (max-width: $mobile-max-width) {
     height: $_loupe-mobile-slide-height;
-  }
-
-  // Make iframe for embedded video always full-width
+  } // Make iframe for embedded video always full-width
   & iframe {
     position: absolute;
     top: 0;
@@ -63,13 +55,10 @@ $_loupe-desktop-slide-height: 675px;
   /// Loupe main: Slick slide overrides
   &.slick-slider {
     margin-bottom: 0; // Slick default: 30px
-  }
-  
-  /// S7 viewer Overrides
+  } /// S7 viewer Overrides
   #loupe-viewer.s7videoviewer {
     height: $_loupe-desktop-slide-height;
   }
-
   #loupe-viewer_container.s7videoviewer {
     // Center within #loupe-viewer
     position: absolute;
@@ -77,42 +66,67 @@ $_loupe-desktop-slide-height: 675px;
     left: 50%;
     transform: translate(-50%, -50%);
   }
-
   #loupe-viewer_videoPlayer.s7videoplayer {
     div {
       &:focus {
-        outline: none;  // Disable glowing blue outline
+        outline: none; // Disable glowing blue outline
       }
     }
   }
-  
-  div#loupe-viewer_controls {    
+  div#loupe-viewer_controls {
     &.s7controlbar {
       display: none;
+    }
+  } // Slick overrides: Replace default 'dot' icon and 
+  // Add support for video icon
+  .slick-dots {
+    li {
+      button {
+        &::before {
+          font-family: $_loupe-nav-font-family-icon;
+          font-size: $_loupe-nav-font-size-icon;
+          color: $_loupe-color-dark;
+          content: "\f10c"; //fa-circle-o
+        }
+      }
+      &.slick-is-video {
+        button {
+          &::before {
+            content: "\f01d"; //fa-play-circle-o;
+          }
+        }
+      }
+      &.slick-active {
+        button {
+          &::before {
+            content: "\f111"; //fa-circle
+          }
+        }
+        &.slick-is-video {
+          button {
+            &::before {
+              content: "\f144"; //fa-play-circle
+            }
+          }
+        }
+      }
     }
   }
 }
 
 /// Loupe navigation
 .loupe-nav {
-  $_loupe-nav-font-family-icon: 'Fontawesome';
-  $_loupe-nav-font-size-icon: 1rem;
-
   &__item {
     position: relative;
     height: 80px;
     max-width: 100%; // Prevents border from 'disappearing' on resize
     padding: 10px;
-    overflow: hidden;
-
-    /// Navigation for video item
+    overflow: hidden; /// Navigation for video item
     &--video {
       overflow: hidden;
-
       .loupe-nav__img {
         height: 100%;
-      }
-      /// Overlay play button on video thumbnail
+      } /// Overlay play button on video thumbnail
       &::after {
         display: block;
         position: absolute;
@@ -125,39 +139,34 @@ $_loupe-desktop-slide-height: 675px;
         content: "\f144"; //fa-play-circle-o
       }
     }
-
-    &.is-active, &.slick-current {
+    &.is-active,
+    &.slick-current {
       border: solid 1px $_loupe-color-border-selected;
       box-shadow: inset 0px 0px 0 1px $_loupe-color-light;
     }
-
     @media (max-width: $tablet-max-width) {
       display: inline-block;
       height: auto;
       width: auto;
       text-align: center;
       background: none !important; // Remove image
-
       &::after {
         content: "\f10c"; //fa-circle-o
         font-family: $_loupe-nav-font-family-icon;
-        color: $_loupe-color-dark;        
+        color: $_loupe-color-dark;
       }
-
-      &.is-active, &.slick-current {
+      &.is-active,
+      &.slick-current {
         border: none;
         box-shadow: none;
-
         &::after {
           content: "\f111"; //fa-circle
         }
       }
-    
       &--video {
         position: relative;
         top: auto;
         left: auto;
-
         &::after {
           display: inline-block;
           position: relative;
@@ -166,10 +175,10 @@ $_loupe-desktop-slide-height: 675px;
           transform: none;
           font-size: $_loupe-nav-font-size-icon;
           color: $_loupe-color-dark;
-          content: "\f01d"; //fa-play-circle-o;
+          content: "\f01d"; //fa-play-circle-o
         }
-
-        &.is-active, &.slick-current {
+        &.is-active,
+        &.slick-current {
           &::after {
             content: "\f144"; //fa-play-circle
           }
@@ -177,80 +186,65 @@ $_loupe-desktop-slide-height: 675px;
       }
     }
   }
-
   &__img {
     width: 100%; // Account for images that are not the correct aspect ratio
-
     // Hide thumbnail images on mobile
     @media (max-width: $tablet-max-width) {
-      display: none !important; // override Slick defaults 
+      display: none !important; // override Slick defaults
     }
-  }
-
-  // Turn off focus outline for all nav links
+  } // Turn off focus outline for all nav links
   & *:focus {
     outline: none;
-  }
-  
-  // Shrink width of navigation on tablet + mobile
+  } // Shrink width of navigation on tablet + mobile
   @media (max-width: $tablet-max-width) {
     width: 50%;
-    margin: 0 auto;  
-  }
-
-  // Override slick control styles
+    margin: 0 auto;
+  } // Override slick control styles
   .slick-list {
-    height: auto !important; // Fix height bug
+    height: 625px; // Fix height bug
+    @media (max-width: $tablet-max-width) {
+      height: 420px;
+    }
   }
-
   .slick-prev {
     position: relative;
     margin: 0 auto;
     top: 0;
     left: 0;
-
     @media (max-width: $tablet-max-width) {
       position: absolute;
       top: 50%;
       left: 15px;
     }
-    
     &::before {
       height: $_loupe-nav-font-size-icon;
       font-family: $_loupe-nav-font-family-icon;
       font-size: $_loupe-nav-font-size-icon;
       color: $_loupe-color-dark;
       content: '\f077'; //fa-chevron-up
-
       @media (max-width: $tablet-max-width) {
-        display: none;
-        // content: '\f053'; //fa-chevron-left
+        display: none; // content: '\f053'; //fa-chevron-left
       }
     }
   }
-  
   .slick-next {
     position: relative;
     margin: 0 auto;
     top: 100%;
     right: 0;
-
     @media (max-width: $tablet-max-width) {
       position: absolute;
       top: 50%;
-      right: 15px;    
+      right: 15px;
     }
-    
     &::before {
       height: $_loupe-nav-font-size-icon;
       font-family: $_loupe-nav-font-family-icon;
       font-size: $_loupe-nav-font-size-icon;
       color: $_loupe-color-dark;
       content: '\f078'; //fa-chevron-down
-
       @media (max-width: $tablet-max-width) {
-        display: none;
-        // content: '\f054'; //fa-chevron-right
+        display: none; // content: '\f054'; //fa-chevron-right
       }
     }
   }
@@ -258,6 +252,6 @@ $_loupe-desktop-slide-height: 675px;
 
 /// TODO: See if there's a way to refactor Scene7 video viewer template
 #s7_videoview.s7videoviewer {
-  width:100%;
-  height:auto;
+  width: 100%;
+  height: auto;
 }

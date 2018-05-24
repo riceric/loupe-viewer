@@ -8,10 +8,10 @@
        var imgNA = "/on/demandware.static/Sites-Columbia_US-Site/-/default/dw3ad2cfbf/images/noimagelarge.png";
     3. Add options for dimensions and key selectors
 */
-var Loupe = (function() {
+var Loupe = (function () {
     var _ = this;
 
-    init = function(settings, imgJson) {
+    init = function (settings, imgJson) {
         // Module defaults
         _.defaults = {
             maxTabletWidth: 1023,
@@ -25,6 +25,8 @@ var Loupe = (function() {
             videoSelector: '.loupe__slide--video',
             navItemSelector: '.loupe-nav__item',
             navVideoSelector: '.loupe-nav__item--video',
+            scrollOnDesktop: false, // Placeholder for MHW/SOR functionality
+            showThumbnails: true, // Toggle thumbnails, eg. Quick View
             viewerCarouselOptions: {
                 mobileFirst: true,
                 slidesToShow: 1,
@@ -42,21 +44,19 @@ var Loupe = (function() {
                 swipe: true,
                 vertical: false,
                 verticalSwiping: false,
-                asNavFor: '.loupe-main',    // TODO: Make this configurable
+                asNavFor: '.loupe-main', // TODO: Make this configurable
                 infinite: false,
 
-                responsive: [
-                    {
-                        breakpoint: 1024,
-                        settings: {
-                            centerMode: true,
-                            focusOnSelect: true,
-                            slidesToShow: 6,
-                            vertical: true,
-                            verticalSwiping: true,
-                        }
+                responsive: [{
+                    breakpoint: 1024,
+                    settings: {
+                        centerMode: true,
+                        focusOnSelect: true,
+                        slidesToShow: 6,
+                        vertical: true,
+                        verticalSwiping: true,
                     }
-                ]
+                }]
             }
         }
 
@@ -64,8 +64,8 @@ var Loupe = (function() {
         _.config = $.extend(_, _.defaults, settings);
 
         // Setup default S7 image parameters
-        _.dimParamDefault = '?wid='+config.defaultWidth+'&hei='+config.defaultHeight;
-        _.dimParamHQ = '?wid='+config.hqWidth+'&hei='+config.hqHeight;
+        _.dimParamDefault = '?wid=' + config.defaultWidth + '&hei=' + config.defaultHeight;
+        _.dimParamHQ = '?wid=' + config.hqWidth + '&hei=' + config.hqHeight;
 
         // Load images for selected product variant
         loadCarouselViewers(imgJson);
@@ -79,28 +79,28 @@ var Loupe = (function() {
      * @access public
      * @param {String} selector DOM selector containing loupe images
      */
-    var magnify = function(selector) {
-      $(selector).on({
-        click: function() {
-            var imgURI = $(this).data('lgimg');
-            $(this).css('background-image','url('+imgURI+')');
-            $(this).toggleClass('is-active');
-        },
-        mousemove: function(e) {
-          if ($(this).hasClass('is-active')) {
-            var magnified = e.currentTarget;
-            e.offsetX ? offsetX = e.offsetX : offsetX = e.touches[0].pageX;
-            e.offsetY ? offsetY = e.offsetY : offsetX = e.touches[0].pageX;
-            x = offsetX/magnified.offsetWidth*100;
-            y = offsetY/magnified.offsetHeight*100;
-            magnified.style.backgroundPosition = x + '% ' + y + '%';
-          }
-        },
-        mouseleave: function() {
-          $(this).removeClass('is-active');
-        }
+    var magnify = function (selector) {
+        $(selector).on({
+            click: function () {
+                var imgURI = $(this).data('lgimg');
+                $(this).css('background-image', 'url(' + imgURI + ')');
+                $(this).toggleClass('is-active');
+            },
+            mousemove: function (e) {
+                if ($(this).hasClass('is-active')) {
+                    var magnified = e.currentTarget;
+                    e.offsetX ? offsetX = e.offsetX : offsetX = e.touches[0].pageX;
+                    e.offsetY ? offsetY = e.offsetY : offsetX = e.touches[0].pageX;
+                    x = offsetX / magnified.offsetWidth * 100;
+                    y = offsetY / magnified.offsetHeight * 100;
+                    magnified.style.backgroundPosition = x + '% ' + y + '%';
+                }
+            },
+            mouseleave: function () {
+                $(this).removeClass('is-active');
+            }
 
-      });
+        });
     };
 
     /**
@@ -108,7 +108,7 @@ var Loupe = (function() {
      * @access public
      * @param {String} imgData JSON data containing image URLs
      */
-    var loadCarouselViewers = function(imgData) {
+    var loadCarouselViewers = function (imgData) {
         var $slides = $(config.slideContainer);
         var $nav = $(config.navContainer);
         var $navItemVid = $(config.navVideoSelector);
@@ -117,10 +117,7 @@ var Loupe = (function() {
         // numSlides: Hardcoding 1 for video until support is added for multiple videos
         var numSlides = Object.keys(imgData.images).length + 1;
         // Maximum slides to show in mobile navigation
-        var maxSlides = 7; 
-
-        var scrollOnDesktop = true; // Placeholder for MHW / SOR functionality
-        var player; // iframe containing video player
+        var maxSlides = 7;
 
         // Load slick sliders only if slick hasn't already been initialized
         $slides.not('.slick-initialized').slick(config.viewerCarouselOptions);
@@ -134,32 +131,58 @@ var Loupe = (function() {
             $nav.slick('slickRemove', null, null, true);
         }
 
+        // If thumbnails are turned off, do not render the nav slick component
+        if (!config.showThumbnails) {
+            console.log('Hiding nav slick slider...');
+            // TODO: Update function to omit unneeded component; for now, we're just hiding it
+            $nav.hide();
+            $slides.slick('setOption', {
+                dots: true
+            }, true);
+        } else {
+            $nav.show();
+            $slides.slick('setOption', {
+                dots: false
+            }, true);
+        }
+
         // Fix bug where navigation position incorrectly renders when resizing window
-        $(window).resize(function(){
+        $(window).resize(function () {
             $nav.slick('reinit');
         })
 
         // Re-center slides based on how many slides should show
         if (numSlides > maxSlides) {
-            $nav.slick('setOption', {slidesToShow: maxSlides}, true);
+            $nav.slick('setOption', {
+                slidesToShow: maxSlides
+            }, true);
         } else {
-            $nav.slick('setOption', {slidesToShow: numSlides}, true);
+            $nav.slick('setOption', {
+                slidesToShow: numSlides
+            }, true);
         }
 
         // Setup carousel slides
         for (var i in imgData['images']) {
-            $slides.slick('slickAdd','<div class="loupe__slide"><figure class="loupe" data-lgimg="' + imgData.images[i] + dimParamHQ + '"><div id="loupe__lens"><img src="' + imgData.images[i] + dimParamDefault + '" class="loupe__img"></div></figure></div>');
-            $nav.slick('slickAdd','<div class="loupe-nav__item"><img src="'+ imgData.images[i] + dimParamDefault + '" class="loupe-nav__img" /></div>');
+            $slides.slick('slickAdd', '<div class="loupe__slide"><figure class="loupe" data-lgimg="' + imgData.images[i] + dimParamHQ + '"><div id="loupe__lens"><img src="' + imgData.images[i] + dimParamDefault + '" class="loupe__img"></div></figure></div>');
+            $nav.slick('slickAdd', '<div class="loupe-nav__item"><img src="' + imgData.images[i] + dimParamDefault + '" class="loupe-nav__img" /></div>');
         }
         // Append video slide to main carousel and nav carousel
         // TODO: Optimize this block to be more DRY
         if (videoID != '') {
             if (imgData['video'].host == 'youtube') {
-                $slides.slick('slickAdd','<div class="loupe__slide loupe__slide--video"><div class="embed-responsive--16-9"><img src="https://img.youtube.com/vi/'+ videoID +'/hqdefault.jpg" /></div></div>');
-                $nav.slick("slickAdd",'<div class="loupe-nav__item loupe-nav__item--video"><img src="https://img.youtube.com/vi/'+ videoID +'/hqdefault.jpg" class="loupe-nav__img" /></div>');
+                // Add video slick slide with video placeholder
+                $slides.slick('slickAdd', '<div class="loupe__slide loupe__slide--video"><div class="embed-responsive--16-9"><img src="https://img.youtube.com/vi/' + videoID + '/hqdefault.jpg" /></div></div>');
 
-                // Init YouTube viewer
-                $('.loupe-nav__item--video').on('click.togglePlayback', function() {
+                // Add ability to custom style to video slick dot
+                var newVideoSlideDot = $('.loupe-main .slick-dots li').get(-1);
+                $(newVideoSlideDot).addClass('slick-is-video');
+
+                // Add navigation slick slide for video
+                $nav.slick("slickAdd", '<div class="loupe-nav__item loupe-nav__item--video"><img src="https://img.youtube.com/vi/' + videoID + '/hqdefault.jpg" class="loupe-nav__img" /></div>');
+
+                // Init YouTube viewer from thumbnail and dot
+                $('.loupe-nav__item--video, .slick-is-video').on('click.togglePlayback', function () {
                     // If video is already loaded, just play video
                     if ($('.loupe__item--video').find('#loupe-video').length < 1) {
                         loadYouTubeVideo(videoID);
@@ -167,12 +190,21 @@ var Loupe = (function() {
                 });
             } else if (imgData['video'].host == 'vimeo') {
                 // If video is hosted by Vimeo, get thumbnail URL, which is different than the videoID and requires an API call
-                $.getJSON('https://www.vimeo.com/api/v2/video/' + videoID + '.json?callback=?', {format: "json"}, function(data) {
-                    $slides.slick('slickAdd','<div class="loupe__slide loupe__slide--video"><div class="embed-responsive--16-9"><img src="https://i.vimeocdn.com/video/'+ data[0].thumbnail_large +'" /></div></div>');
-                    $nav.slick('slickAdd','<div class="loupe-nav__item loupe-nav__item--video"><img src="https://i.vimeocdn.com/video/'+ data[0].thumbnail_large +'" class="loupe-nav__img" /></div>');
+                $.getJSON('https://www.vimeo.com/api/v2/video/' + videoID + '.json?callback=?', {
+                    format: "json"
+                }, function (data) {
+                    // Add video slick slide with video placeholder
+                    $slides.slick('slickAdd', '<div class="loupe__slide loupe__slide--video"><div class="embed-responsive--16-9"><img src="https://i.vimeocdn.com/video/' + data[0].thumbnail_large + '" /></div></div>');
 
-                    // Init Vimeo viewer
-                    $('.loupe-nav__item--video').on('click.togglePlayback', function() {
+                    // Add ability to custom style to video slick dot
+                    var newVideoSlideDot = $('.loupe-main .slick-dots li').get(-1);
+                    $(newVideoSlideDot).addClass('slick-is-video');
+
+                    // Add navigation slick slide for video
+                    $nav.slick('slickAdd', '<div class="loupe-nav__item loupe-nav__item--video"><img src="https://i.vimeocdn.com/video/' + data[0].thumbnail_large + '" class="loupe-nav__img" /></div>');
+
+                    // Init Vimeo viewer from thumbnail and dot
+                    $('.loupe-nav__item--video, .slick-is-video').on('click.togglePlayback', function () {
                         // If video is already loaded, just play video
                         if ($('.loupe__item--video').find('#loupe-video').length < 1) {
                             loadVimeoVideo(videoID);
@@ -180,12 +212,19 @@ var Loupe = (function() {
                     });
                 });
             } else if (imgData['video'].host == 'scene7') {
-                $slides.slick('slickAdd','<div class="loupe__slide loupe__slide--video"><div class="embed-responsive--16-9"><img src="https://s7d2.scene7.com/is/image/ColumbiaSportswear2/'+ videoID +'?wid=675" /></div></div>');
-                $nav.slick('slickAdd','<div class="loupe-nav__item loupe-nav__item--video"><img src="https://s7d2.scene7.com/is/image/ColumbiaSportswear2/'+ videoID +'?wid=675" class="loupe-nav__img" /></div>');
+                // Add video slick slide with video placeholder
+                $slides.slick('slickAdd', '<div class="loupe__slide loupe__slide--video"><div class="embed-responsive--16-9"><img src="https://s7d2.scene7.com/is/image/ColumbiaSportswear2/' + videoID + '?wid=675" /></div></div>');
 
-                // Init Scene7 video viewer
-                $('.loupe-nav__item--video').on('click.togglePlayback', function() {
-                    if($('.loupe__item--video').find('#loupe-video').length < 1) {
+                // Add ability to custom style to video slick dot
+                var newVideoSlideDot = $('.loupe-main .slick-dots li').get(-1);
+                $(newVideoSlideDot).addClass('slick-is-video');
+
+                // Add navigation slick slide for video
+                $nav.slick('slickAdd', '<div class="loupe-nav__item loupe-nav__item--video"><img src="https://s7d2.scene7.com/is/image/ColumbiaSportswear2/' + videoID + '?wid=675" class="loupe-nav__img" /></div>');
+
+                // Init Scene7 video viewer from thumbnail and dot
+                $('.loupe-nav__item--video, .slick-is-video').on('click.togglePlayback', function () {
+                    if ($('.loupe__item--video').find('#loupe-video').length < 1) {
                         loadS7Video(videoID);
                     }
                 });
@@ -199,16 +238,16 @@ var Loupe = (function() {
      * @param {Object} target Target DOM element
      * @return void
      */
-    var loadYouTubeVideo = function(videoID) {
+    var loadYouTubeVideo = function (videoID) {
         var scriptURL = 'https://www.youtube.com/iframe_api';
         var width = config.defaultWidth;
         var height = config.defaultHeight;
         var videoHTML = '<iframe id="loupe-video" type="text/html" ' +
-                            'width="'+ width +'" height="'+ height +'" ' +
-                            'src="http://www.youtube.com/embed/'+ videoID +
-                            '?color=white&rel=0&showinfo=0&enablejsapi=1" ' +
-                            'frameborder="0">' +
-                        '</iframe>';
+            'width="' + width + '" height="' + height + '" ' +
+            'src="http://www.youtube.com/embed/' + videoID +
+            '?color=white&rel=0&showinfo=0&enablejsapi=1" ' +
+            'frameborder="0">' +
+            '</iframe>';
         var $target = $('.embed-responsive--16-9');
 
         // Load video into slide
@@ -225,7 +264,7 @@ var Loupe = (function() {
         }
 
         // Use API with existing YouTube player
-        window.onYouTubeIframeAPIReady = function() {
+        window.onYouTubeIframeAPIReady = function () {
             window.YTPlayer = new YT.Player('loupe-video', {
                 events: {
                     'onReady': onPlayerReady,
@@ -234,18 +273,18 @@ var Loupe = (function() {
         }
 
         // The API will call this function when the video player is ready.
-        window.onPlayerReady = function(event) {
+        window.onPlayerReady = function (event) {
             // Setup click event that can pause videos when the iframe loses "focus"
-            $('.loupe-nav__item').not('.loupe-nav__item--video')
-                .on('click', function(){
+            $('.loupe-nav__item, .slick-dots button').not('.loupe-nav__item--video, .slick-is-video')
+                .on('click', function () {
                     YTPlayer.pauseVideo();
-            });
+                });
 
-            $('.loupe-nav__item--video')
+            $('.loupe-nav__item--video, .slick-is-video')
                 .off('click.togglePlayback')
-                .on('click', function() {
+                .on('click', function () {
                     YTPlayer.playVideo();
-            });
+                });
         }
 
         return false;
@@ -255,7 +294,7 @@ var Loupe = (function() {
      * Load Vimeo video
      * @param {String} videoID Vimeo Video ID
      */
-    var loadVimeoVideo = function(videoID) {
+    var loadVimeoVideo = function (videoID) {
         var scriptURL = 'https://player.vimeo.com/api/player.js';
         var width = config.defaultWidth;
         var $navItem = $(config.navItemSelector);
@@ -274,7 +313,7 @@ var Loupe = (function() {
             var firstScriptTag = document.getElementsByTagName('script')[0];
 
             // Wait for remote script to load before assigning event listeners
-            tag.onload = function() {
+            tag.onload = function () {
                 // Clear placeholder image before loading video
                 $target.html('');
 
@@ -283,16 +322,16 @@ var Loupe = (function() {
 
                 // Click on non-video nav item to pause
                 $(config.navItemSelector).not(config.navVideoSelector)
-                .on('click', function(){
-                    vimeoPlayer.pause();
-                });
+                    .on('click', function () {
+                        vimeoPlayer.pause();
+                    });
 
                 // Click on video nav item to play]
                 $(config.navVideoSelector)
                     .off('click.togglePlayback')
-                    .on('click', function() {
+                    .on('click', function () {
                         vimeoPlayer.play();
-                });
+                    });
             };
             tag.src = scriptURL;
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
@@ -302,14 +341,14 @@ var Loupe = (function() {
     /**
      * Load Scene7 video
      */
-    var loadS7Video = function(videoID) {
+    var loadS7Video = function (videoID) {
+        var scriptURL = "https://s7d2.scene7.com/s7viewers/html5/js/VideoViewer.js";
         var s7ServerURL = "http://s7d2.scene7.com/is/image/";
         var s7VideoServerURL = "http://s7d2.scene7.com/is/content/";
         var s7basePath = "ColumbiaSportswear2/";
         var s7contentURL = "http://s7d2.scene7.com/skins/";
         var s7emailURL = "http://s7d2.scene7.com/s7/emailFriend";
         var s7ConfigPath = "Scene7SharedAssets/Universal_HTML5_Video";
-        var scriptURL = "https://s7d2.scene7.com/s7viewers/html5/js/VideoViewer.js";
         var $target = $('.embed-responsive--16-9');
         var duplicateFound = false;
 
@@ -323,12 +362,12 @@ var Loupe = (function() {
             $target.html('<div id="loupe-viewer"></div>');
 
             // Initiate viewer once script is loaded
-            tag.onload = function() {
+            tag.onload = function () {
                 var s7_videoview = new s7viewers.VideoViewer({
-                    "containerId" : "loupe-viewer",
-                    "params" : {
-                        "serverurl" : s7ServerURL,
-                        "asset" : s7basePath + videoID,
+                    "containerId": "loupe-viewer",
+                    "params": {
+                        "serverurl": s7ServerURL,
+                        "asset": s7basePath + videoID,
                         "contenturl": s7contentURL,
                         "config": s7ConfigPath,
                         "autoplay": "1",
@@ -341,18 +380,18 @@ var Loupe = (function() {
                 // Simulate click on s7playPause button
                 // Click on non-video nav item to pause
                 $(config.navItemSelector).not(config.navVideoSelector)
-                    .on('click', function(){
+                    .on('click', function () {
                         // Class generated by S7, selected="false" equivalent to pauseBtn
                         $('#loupe-viewer_playPauseButton[selected="false"]').click();
-                });
+                    });
 
                 // Click on video nav item to play
                 $(config.navVideoSelector)
                     .off('click.togglePlayback')
-                    .on('click', function() {
+                    .on('click', function () {
                         // Class generated by S7, selected="true" equivalent to playBtn
                         $('#loupe-viewer_playPauseButton[selected="true"]').click();
-                });
+                    });
             };
             tag.src = scriptURL;
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
@@ -368,7 +407,7 @@ var Loupe = (function() {
 })();
 
 /* ########## INITIALIZATION ########## */
-$(function() {
+$(function () {
     /* Placeholder for JSON data that should come from PDP variant
         TODO: Change reference to json object
         * N/A image URL?
@@ -383,8 +422,8 @@ $(function() {
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2",
         ],
         "video": {
-          "data": "tu2-xbn2Zjc",
-          "host": "youtube"
+            "data": "tu2-xbn2Zjc",
+            "host": "youtube"
         }
     };
     var imgData_vimeo = {
@@ -393,8 +432,8 @@ $(function() {
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2",
         ],
         "video": {
-          "data": "61227076",
-          "host": "vimeo"
+            "data": "61227076",
+            "host": "vimeo"
         }
     };
     var imgData_s7 = {
@@ -411,30 +450,33 @@ $(function() {
             "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2",
         ],
         "video": {
-          "data": "sor16-web",
-          "host": "scene7"
+            "data": "sor16-web",
+            "host": "scene7"
         }
     };
 
-    $('.swatch1').on('click', function(){
+    $('.swatch1').on('click', function () {
         Loupe.init({
-            defaultWidth: 400,
-            defaultHeight: 420,
-        },
-        imgData);
+                showThumbnails: false,
+                defaultWidth: 400,
+                defaultHeight: 420,
+            },
+            imgData);
     });
-    $('.swatch2').on('click', function(){
+    $('.swatch2').on('click', function () {
         Loupe.init({
-            defaultWidth: 400,
-            defaultHeight: 420,
-        },
-        imgData_vimeo);
+                showThumbnails: false,
+                defaultWidth: 400,
+                defaultHeight: 420,
+            },
+            imgData_vimeo);
     });
-    $('.swatch3').on('click', function(){
+    $('.swatch3').on('click', function () {
         Loupe.init({
-            defaultWidth: 400,
-            defaultHeight: 420,
-        },
-        imgData_s7);
+                showThumbnails: false,
+                defaultWidth: 400,
+                defaultHeight: 420,
+            },
+            imgData_s7);
     });
 });
