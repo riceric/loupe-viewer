@@ -4,9 +4,12 @@ $_loupe-color-light: #fff;
 $_loupe-color-dark: #777;
 $_loupe-color-border-selected: #999;
 $_loupe-mobile-slide-height: 425px;
-$_loupe-desktop-slide-height: 675px;
-$_loupe-nav-font-family-icon: 'Fontawesome';
-$_loupe-nav-font-size-icon: 1rem;
+$_loupe-desktop-slide-height: 625px;
+$_loupe-desktop-thumbnail-height: 89px;
+$_loupe-nav-font-family-icon: "Fontawesome";
+$_loupe-nav-font-size-icon: 0.75rem;
+$_loupe-nav-icon-spacing: 0.75rem;
+
 /// Main loupe viewer styles
 .loupe {
   margin: 0; // Reset margins
@@ -15,57 +18,56 @@ $_loupe-nav-font-size-icon: 1rem;
   width: 100%;
   overflow: hidden;
   cursor: zoom-in;
+
+  // Turn off focus effect
+  &:focus {
+    outline: none;
+  }
+
   &.is-active {
     cursor: zoom-out;
     .loupe__img {
       opacity: 0;
     }
   }
+
   &__slide {
     display: block;
-    height: auto;
-    width: 100%;
+    max-height: $_loupe-desktop-slide-height;
     margin: 0 auto;
-    &--video {}
   }
+
   &__img {
-    transition: opacity .5s;
+    transition: opacity 0.5s;
     display: block;
-    width: 100%;
+    max-width: 100%;
+
+    @media (max-width: $tablet-max-width) {
+        width: 100%;
+    }
   }
 }
 
-/// Container for third-party videos
-.embed-responsive--16-9 {
-  position: relative;
-  height: $_loupe-desktop-slide-height;
-  @media (max-width: $mobile-max-width) {
-    height: $_loupe-mobile-slide-height;
-  } // Make iframe for embedded video always full-width
-  & iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-}
-
+/// Container for large product carousel of loupe viewers
 .loupe-main {
   /// Loupe main: Slick slide overrides
   &.slick-slider {
     margin-bottom: 0; // Slick default: 30px
-  } /// S7 viewer Overrides
+  }
+
+  /// S7 viewer Overrides
   #loupe-viewer.s7videoviewer {
     height: $_loupe-desktop-slide-height;
   }
+
+  /// Center within #loupe-viewer
   #loupe-viewer_container.s7videoviewer {
-    // Center within #loupe-viewer
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
   }
+
   #loupe-viewer_videoPlayer.s7videoplayer {
     div {
       &:focus {
@@ -73,35 +75,47 @@ $_loupe-nav-font-size-icon: 1rem;
       }
     }
   }
+
   div#loupe-viewer_controls {
     &.s7controlbar {
       display: none;
     }
-  } // Slick overrides: Replace default 'dot' icon and 
-  // Add support for video icon
+  }
+
+  /// Slick overrides: Replace default 'dot' icon and
+  /// Add support for video icon
   .slick-dots {
+    bottom: -1.5rem;  // Override carousel.less style
+
     li {
+      margin: 0 $_loupe-nav-icon-spacing/2;
+
       button {
         &::before {
           font-family: $_loupe-nav-font-family-icon;
           font-size: $_loupe-nav-font-size-icon;
           color: $_loupe-color-dark;
-          content: "\f10c"; //fa-circle-o
+          content: "\f10c"; // fa-circle-o
+          text-shadow: none; // Override slick default
         }
       }
+
       &.slick-is-video {
         button {
           &::before {
-            content: "\f01d"; //fa-play-circle-o;
+            content: "\f01d"; //fa-play-circle-o
           }
         }
       }
+
       &.slick-active {
         button {
           &::before {
+            color: $_loupe-color-dark;
             content: "\f111"; //fa-circle
           }
         }
+
         &.slick-is-video {
           button {
             &::before {
@@ -116,17 +130,23 @@ $_loupe-nav-font-size-icon: 1rem;
 
 /// Loupe navigation
 .loupe-nav {
+  height: 625px; // Force height for nav thumbnails on tablet / mobile
+
   &__item {
     position: relative;
-    height: 80px;
-    max-width: 100%; // Prevents border from 'disappearing' on resize
-    padding: 10px;
-    overflow: hidden; /// Navigation for video item
+    max-width: $_loupe-desktop-thumbnail-height;
+    max-height: $_loupe-desktop-thumbnail-height;
+    margin-bottom: 1rem;
+    overflow: hidden;
+
+    /// Navigation for video item
     &--video {
       overflow: hidden;
       .loupe-nav__img {
         height: 100%;
-      } /// Overlay play button on video thumbnail
+      }
+
+      /// Overlay play button on video thumbnail
       &::after {
         display: block;
         position: absolute;
@@ -139,30 +159,35 @@ $_loupe-nav-font-size-icon: 1rem;
         content: "\f144"; //fa-play-circle-o
       }
     }
+
     &.is-active,
-    &.slick-current {
+    &.slick-slide.slick-current {
       border: solid 1px $_loupe-color-border-selected;
       box-shadow: inset 0px 0px 0 1px $_loupe-color-light;
     }
+
     @media (max-width: $tablet-max-width) {
       display: inline-block;
-      height: auto;
       width: auto;
       text-align: center;
       background: none !important; // Remove image
+      margin-top: 1rem; // Add space between dots and image
+
       &::after {
         content: "\f10c"; //fa-circle-o
         font-family: $_loupe-nav-font-family-icon;
         color: $_loupe-color-dark;
       }
+
       &.is-active,
-      &.slick-current {
+      &.slick-slide.slick-current {
         border: none;
         box-shadow: none;
         &::after {
           content: "\f111"; //fa-circle
         }
       }
+
       &--video {
         position: relative;
         top: auto;
@@ -177,8 +202,9 @@ $_loupe-nav-font-size-icon: 1rem;
           color: $_loupe-color-dark;
           content: "\f01d"; //fa-play-circle-o
         }
+
         &.is-active,
-        &.slick-current {
+        &.slick-slide.slick-current {
           &::after {
             content: "\f144"; //fa-play-circle
           }
@@ -187,41 +213,58 @@ $_loupe-nav-font-size-icon: 1rem;
     }
   }
   &__img {
-    width: 100%; // Account for images that are not the correct aspect ratio
-    // Hide thumbnail images on mobile
+    max-width: $_loupe-desktop-thumbnail-height;
+    max-height: $_loupe-desktop-thumbnail-height;
+
+    /// Account for images that are not the correct aspect ratio
+    /// Hide thumbnail images on mobile
     @media (max-width: $tablet-max-width) {
       display: none !important; // override Slick defaults
     }
-  } // Turn off focus outline for all nav links
+  }
+
+  /// Turn off focus outline for all nav links
   & *:focus {
     outline: none;
-  } // Shrink width of navigation on tablet + mobile
+  }
+
+  /// Shrink width of navigation on tablet
   @media (max-width: $tablet-max-width) {
     width: 50%;
+    height: 40px; // Force height for nav "dots" on tablet / mobile
     margin: 0 auto;
-  } // Override slick control styles
+  }
+
+  /// Override slick control styles
   .slick-list {
-    height: 625px; // Fix height bug
+    min-height: $_loupe-desktop-slide-height; // Fix height bug
+    @media (max-width: $mobile-max-width) {
+      min-height: 320px;
+    }
     @media (max-width: $tablet-max-width) {
-      height: 420px;
+      min-height: 420px;
     }
   }
+
   .slick-prev {
     position: relative;
     margin: 0 auto;
     top: 0;
     left: 0;
+
     @media (max-width: $tablet-max-width) {
       position: absolute;
       top: 50%;
       left: 15px;
     }
+
     &::before {
       height: $_loupe-nav-font-size-icon;
       font-family: $_loupe-nav-font-family-icon;
       font-size: $_loupe-nav-font-size-icon;
       color: $_loupe-color-dark;
-      content: '\f077'; //fa-chevron-up
+      content: "\f077"; //fa-chevron-up
+
       @media (max-width: $tablet-max-width) {
         display: none; // content: '\f053'; //fa-chevron-left
       }
@@ -232,19 +275,22 @@ $_loupe-nav-font-size-icon: 1rem;
     margin: 0 auto;
     top: 100%;
     right: 0;
+
     @media (max-width: $tablet-max-width) {
       position: absolute;
       top: 50%;
       right: 15px;
     }
+
     &::before {
       height: $_loupe-nav-font-size-icon;
       font-family: $_loupe-nav-font-family-icon;
       font-size: $_loupe-nav-font-size-icon;
       color: $_loupe-color-dark;
-      content: '\f078'; //fa-chevron-down
+      content: "\f078"; //fa-chevron-down
+
       @media (max-width: $tablet-max-width) {
-        display: none; // content: '\f054'; //fa-chevron-right
+        display: none;
       }
     }
   }
@@ -254,4 +300,27 @@ $_loupe-nav-font-size-icon: 1rem;
 #s7_videoview.s7videoviewer {
   width: 100%;
   height: auto;
+}
+
+/// Container for third-party videos
+/// TODO: Move to a different SCSS file (object layer)
+.embed-responsive--16-9 {
+  position: relative;
+  height: 0;
+  padding-top: 56.25%;
+  margin-top: 170px; // ~ 625 - 284 / 2
+  
+  @media (max-width: $mobile-max-width) {
+    height: $_loupe-mobile-slide-height;
+    margin-top: 0;
+  }
+
+  /// Make iframe for embedded video always full-width
+  & iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 }
