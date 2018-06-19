@@ -3,7 +3,7 @@ $tablet-max-width: 1023px;
 $_loupe-color-light: #fff;
 $_loupe-color-dark: #777;
 $_loupe-color-border-selected: #999;
-$_loupe-mobile-slide-height: 425px;
+$_loupe-mobile-slide-height: 325px;
 $_loupe-desktop-slide-height: 625px;
 $_loupe-desktop-thumbnail-height: 89px;
 $_loupe-nav-font-family-icon: "Fontawesome";
@@ -33,7 +33,7 @@ $_loupe-nav-icon-spacing: 0.75rem;
 
   &__slide {
     display: block;
-    max-height: $_loupe-desktop-slide-height;
+    max-height: 100%;
     margin: 0 auto;
   }
 
@@ -53,6 +53,10 @@ $_loupe-nav-icon-spacing: 0.75rem;
   /// Loupe main: Slick slide overrides
   &.slick-slider {
     margin-bottom: 0; // Slick default: 30px
+
+    @media (max-width: $tablet-max-width) {
+      margin-bottom: 1.625rem; // Match offset of dots bottom position
+    }
   }
 
   /// S7 viewer Overrides
@@ -85,7 +89,7 @@ $_loupe-nav-icon-spacing: 0.75rem;
   /// Slick overrides: Replace default 'dot' icon and
   /// Add support for video icon
   .slick-dots {
-    bottom: -1.5rem;  // Override carousel.less style
+    bottom: -1.625rem;  // Override carousel.less style
 
     li {
       margin: 0 $_loupe-nav-icon-spacing/2;
@@ -130,7 +134,7 @@ $_loupe-nav-icon-spacing: 0.75rem;
 
 /// Loupe navigation
 .loupe-nav {
-  height: 625px; // Force height for nav thumbnails on tablet / mobile
+  height: $_loupe-desktop-slide-height; // Force height for nav thumbnails on tablet / mobile
 
   &__item {
     position: relative;
@@ -308,8 +312,8 @@ $_loupe-nav-icon-spacing: 0.75rem;
   position: relative;
   height: 0;
   padding-top: 56.25%;
-  margin-top: 170px; // ~ 625 - 284 / 2
-  
+  margin-top: 21%; // ~ (1 - 9/16) / 2 (50% of full height - minus aspect ratio)
+
   @media (max-width: $mobile-max-width) {
     height: $_loupe-mobile-slide-height;
     margin-top: 0;
