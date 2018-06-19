@@ -126,20 +126,26 @@ var Loupe = (function () {
     }
     /**
      * Apply custom style to slide navigation for video slides
+     * Pre-req: .slide-dot li has to exist
      */
     var _styleVideoDot = function() {
-        console.log('_styleVideoDot() running...');
-        // Add ability to custom style to video slick dot
-        var vidSlideDot = $(".loupe-main .slick-dots li").get(-1);
-        $(vidSlideDot).addClass("slick-is-video");
+        // Keep checking until slick has completed adding dot navigation
+        var dotsExist = setInterval(function() {
+            if ($('.loupe-main .slick-dots').length) {
+                var vidSlideDot = $(".loupe-main .slick-dots li").get(-1);
+                $(vidSlideDot).addClass("slick-is-video");
+                clearInterval(dotsExist);
+            }
+        }, 100);
     }
+
     /**
      * Append slides to the Slick JS carousel
      * @param {Object} slidesObj Target container for all the slides
      * @param {String} slideHTML HTML for the slide
+     * @param {function} callback Optional call back function
      */
     var _addSlide = function (slidesObj, slideHTML, callback) {
-        console.log('_addSlide() running...');
         slidesObj.slick('slickAdd', slideHTML);
         if (callback != null) {
             callback();
@@ -218,10 +224,7 @@ var Loupe = (function () {
 
                 // Add video slick slide with video placeholder, add navigation slide
                 _addSlide($slides, vidSlideHTML);
-                _addSlide($nav, vidNavSlide);
-
-                // Add ability to custom style to video slick dot
-                _styleVideoDot();
+                _addSlide($nav, vidNavSlide, _styleVideoDot);
 
                 // Init Scene7 video viewer from thumbnail and dot
                 $(config.navVideoSelector).on("click.togglePlayback", function () {
