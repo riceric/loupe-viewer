@@ -1,9 +1,15 @@
 # Packages / Libraries #
 **/node_modules
+webpack*
+.eslint*
+.vscode/
+package.json
+package-lock.json
 
 # Compiled source #
 *.css
-*.map
+**/scss/*.css
+**/scss/*.map
 .sass-cache/
 
 # OS generated files #

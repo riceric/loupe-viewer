@@ -78,10 +78,10 @@ var Loupe = (function () {
             _.imgData = imgJson;
 
             // Load images for selected product variant
-            loadCarouselViewers(imgJson);
+            _loadCarouselViewers(imgJson);
 
             // Initiate loupe mode on image
-            magnify(config.loupeSelector);
+            _magnify(config.loupeSelector);
 
             // Timeout for optimized performance on resize events
             _.resizeTimout;
@@ -109,9 +109,17 @@ var Loupe = (function () {
             slidesObj.slick('slickRemove', null, null, true);
         }
     }
+
+    /**
+     * @return {String} videoID or null if video not found
+     */
+    var _getVideoID = function() {
+        return (_.imgData['video'] != null) ? _.imgData['video'].data : null;
+    }
+
     /**
      * Apply custom style to slide navigation for video slides
-     * Pre-req: .slide-dot li has to exist
+     * Pre-req: showThumbnails = false and videoSelector found in DOM
      */
     var _styleVideoDot = function() {
         // Keep checking until slick has completed adding dot navigation
@@ -131,34 +139,41 @@ var Loupe = (function () {
      * @param {string} id Unique identifier for video
      */
     var _loadVideo = function(host, id) {
+        console.log('_loadVideo()... host = ' + host);
         var loadVideoEvent = function () {
             // If video is already loaded, just play video
             if ($(config.videoSelector).find('#loupe-video').length < 1) {
                 // Init correct viewer based on current host
                 if (host == 'youtube') {
-                    loadYouTubeVideo(id);
+                    _loadYouTubeVideo(id);
                 } else if (host == 'vimeo') {
-                    loadVimeoVideo(id);
+                    _loadVimeoVideo(id);
                 } else if (host == 'scene7') {
-                    loadS7Video(id);
+                    _loadS7Video(id);
                 }
             }
         };
 
         // Keep checking until slick has completed adding video slides
-        var videoSlideExists = setInterval(function() {
-            if ($(config.videoSelector).length) {
+        if (_getVideoID !== null && $(config.videoSelector).length > 0) {
+            var videoSlideExists = setInterval(function() {
+            console.log("videoSelector.length = " + $(config.videoSelector).length);
+                // If scrollOnDesktop = true, don't wait for click event to load video
+                if ($(config.scrollOnDesktop)) {
+                    loadVideoEvent();
+                }
                 // Add click event to video navigation
                 $(config.navSlide).on('click.loupeVideo', loadVideoEvent);
                 // Add event to slick afterChange event, capturing any navigation to slide
                 $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
-                    if (currentSlide == $('.loupe__slide').length - 1) {
+                    // Trigger 'play' if this is a video slide
+                    if ($('.loupe__slide').eq(currentSlide).hasClass('loupe__slide--video')) {
                         loadVideoEvent();
                     }
                 });
                 clearInterval(videoSlideExists);
-            }
-        }, 100);
+            }, 100);
+        }
     }
 
     /**
@@ -168,6 +183,7 @@ var Loupe = (function () {
      * @param {function} callback Optional call back function
      */
     var _addSlide = function (slidesObj, slideHTML, callback) {
+        console.log('_addSlide ' + slideHTML);
         slidesObj.slick('slickAdd', slideHTML);
         if (callback != null) {
             callback();
@@ -178,10 +194,11 @@ var Loupe = (function () {
      * Append video slide to main carousel and nav carousel
      * @param {*} imgData 
      */
-    var _appendVideoSlides = function (imgData, videoID) {
+    var _appendVideoSlides = function (imgData) {
+        console.log('_appendVideoSlides...videoID = ' + _getVideoID() + ', host = ' + imgData['video'].host);
         var $slides = $(config.slideContainer);
         var $nav = $(config.navContainer);
-        var videoID = (imgData['video'] != null) ? imgData['video'].data : null;
+        var videoID = _getVideoID();
 
         // TODO: Optimize this block to be more DRY
         if (videoID && videoID !== null) {
@@ -258,7 +275,9 @@ var Loupe = (function () {
         // TODO: Update function to omit unneeded component; for now, we're just hiding it
         $(config.navContainer).hide();
         $(config.slideContainer).slick('setOption', 'dots', true, true);
-        _styleVideoDot();
+        if (_getVideoID() !== null) {
+            _styleVideoDot();
+        }
     }
 
     /**
@@ -284,6 +303,26 @@ var Loupe = (function () {
             _unsetCompactMode();
         }
     };
+
+    /**
+     * Scrolling utility function used in scollOnDesktop mode
+     * @param {Object} element Scrolling DOM element we're watching for in viewport
+     * @param {Boolean} entirelyInView If true, function returns true only when entire element is in view
+     * @returns {Boolean}
+     */
+    var _isScrolledIntoView = function (element, entirelyInView) {
+        var pageTop = $(window).scrollTop();
+        var pageBottom = pageTop + $(window).height();
+        var elementTop = $(element).offset().top;
+        var elementBottom = elementTop + $(element).height();
+
+        if (entirelyInView === true) {
+            return ((pageTop < elementTop) && (pageBottom > elementBottom));
+        } else {
+            return ((elementTop <= pageBottom) && (elementBottom >= pageTop));
+        }
+    }
+
     //-------------------- MAIN FUNCTIONS --------------------//
     /**
      * Activate 'magnifying glass' effect.
@@ -291,7 +330,7 @@ var Loupe = (function () {
      * @access public
      * @param {String} selector DOM selector containing loupe images
      */
-    var magnify = function (selector) {
+    var _magnify = function (selector) {
         // TODO: Investigate why event listeners were not getting assigned/reassigned to .loupe in original implementation
         $(config.slideContainer).off(); // Reset listeners
         $(config.slideContainer).on({
@@ -321,7 +360,7 @@ var Loupe = (function () {
      * @access public
      * @param {String} imgData JSON data containing image URLs
      */
-    var loadCarouselViewers = function (imgData) {
+    var _loadCarouselViewers = function (imgData) {
 
         // Maximum slides to show in mobile navigation
         var maxSlides = 7;
@@ -363,6 +402,7 @@ var Loupe = (function () {
 
         // Exception: do not initialize slides if scrolling
         if (config.scrollOnDesktop) {
+            // Unslick main slides in preparation for scrolling
             $slides.slick('setOption', 'fade', false, true);
             $slides.slick('unslick');
             $slides.find('.loupe__slide').attr('style',''); // Temporary fix for Slick JS 1.6.0 bug
@@ -370,13 +410,18 @@ var Loupe = (function () {
             // Make nav links slide to loupe-main slide
             $nav.on('click', '.loupe-nav__item', function() {
                 var idx = $(this).index();
-                // console.log('Click event detected on nav item...' + $(this).attr('class') + ' (index: ' + $(this).index() + ')');
-                $slides.animate({
-                    scrollTop: $('.loupe__slide').get(idx).offset().top
-                }, 500);
-            })
+                var $scrollTarget = $('.loupe__slide').get(idx);
 
-            // Make non loupe-main columns 'sticky' using sticky kit
+                // Anchor sticky DOM containers while product slides scroll
+                $nav.addClass('sticky-top');
+                $('html, body').animate({
+                    scrollTop: $($scrollTarget).offset().top
+                }, 500);
+                // Prevent scrolling from locking up after scrollTop animation
+                $(window).bind('mousewheel', function() {
+                    $('html, body').stop();
+                });
+            });
         }
     };
 
@@ -386,7 +431,7 @@ var Loupe = (function () {
      * @param {Object} target Target DOM element
      * @return void
      */
-    var loadYouTubeVideo = function (videoID) {
+    var _loadYouTubeVideo = function (videoID) {
         var scriptURL = 'https://www.youtube.com/iframe_api';
         var $target = $('.embed-responsive--16-9');
         var width = config.defaultWidth;
@@ -425,23 +470,38 @@ var Loupe = (function () {
                 .not(config.navVideoSelector)
                 .on('click', function () {
                     YTPlayer.pauseVideo();
-                })
-                .on('afterChange', function(event, slick, currentSlide, nextSlide){
-                    if (currentSlide != $('.loupe__slide').length - 1) {
-                        YTPlayer.pauseVideo();
-                    }
                 });
 
+            // Slick change to non-video nav item to pause
+            $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
+                YTPlayer.pauseVideo();
+            });
+
+            // Click on to video nav item to play
             $(config.navVideoSelector)
                 .off('click.loupeVideo')
                 .on('click', function () {
                     YTPlayer.playVideo();
-                })
-                .on('afterChange', function(event, slick, currentSlide, nextSlide){
-                    if (currentSlide == $('.loupe__slide').length - 1) {
+                });
+
+            // Slick change to video nav item to play
+            $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
+                // Trigger 'play' if this is a video slide
+                if ($('.loupe__slide').eq(currentSlide).hasClass('loupe__slide--video')) {
+                    YTPlayer.playVideo();
+                }
+            });
+
+            // Setup play/pause on scroll if scrollOnDesktop == true
+            if (config.scrollOnDesktop) {
+                $(window).on('scroll', function() {
+                    if (_isScrolledIntoView($('.loupe__slide--video', false))) {
                         YTPlayer.playVideo();
+                    } else {
+                        YTPlayer.pauseVideo();
                     }
-                });;
+                });
+            }
         };
 
         return false;
@@ -451,7 +511,7 @@ var Loupe = (function () {
      * Load Vimeo video
      * @param {String} videoID Vimeo Video ID
      */
-    var loadVimeoVideo = function (videoID) {
+    var _loadVimeoVideo = function (videoID) {
         var scriptURL = 'https://player.vimeo.com/api/player.js';
         var $target = $('.embed-responsive--16-9');
         var width = config.defaultWidth;
@@ -463,8 +523,7 @@ var Loupe = (function () {
             loop: false
         };
 
-        // Use API with existing YouTube player
-        // Only load YouTube script if it is not found (YTPlayer defined)
+        // Only load Vimeo script if it is not found (vimeoPlayer defined)
         if (typeof vimeoPlayer == 'undefined') {
             var tag = document.createElement('script');
             var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -482,24 +541,38 @@ var Loupe = (function () {
                     .not(config.navVideoSelector)
                     .on('click', function () {
                         vimeoPlayer.pause();
-                    })
-                    .on('afterChange', function(event, slick, currentSlide, nextSlide){
-                        if (currentSlide != $('.loupe__slide').length - 1) {
-                            vimeoPlayer.pause();
-                        }
                     });
+
+                // Slick change to non-video nav item to pause
+                $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
+                    vimeoPlayer.pause();
+                });
 
                 // Click on video nav item to play]
                 $(config.navVideoSelector)
                     .off('click.loupeVideo')
                     .on('click', function () {
                         vimeoPlayer.play();
-                    })
-                    .on('afterChange', function(event, slick, currentSlide, nextSlide){
-                        if (currentSlide == $('.loupe__slide').length - 1) {
+                    });
+
+                // Slick change to video nav item to play
+                $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
+                    // Trigger 'play' if this is a video slide
+                    if ($('.loupe__slide').eq(currentSlide).hasClass('loupe__slide--video')) {
+                        vimeoPlayer.play();
+                    }
+                });
+
+                // Setup play/pause on scroll if scrollOnDesktop == true
+                if (config.scrollOnDesktop) {
+                    $(window).on('scroll', function() {
+                        if (_isScrolledIntoView($('.loupe__slide--video', false))) {
                             vimeoPlayer.play();
+                        } else {
+                            vimeoPlayer.pause();
                         }
                     });
+                }
             };
             tag.src = scriptURL;
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
@@ -509,7 +582,7 @@ var Loupe = (function () {
     /**
      * Load Scene7 video
      */
-    var loadS7Video = function (videoID) {
+    var _loadS7Video = function (videoID) {
         var scriptURL = 'https://s7d2.scene7.com/s7viewers/html5/js/VideoViewer.js';
         var $target = $('.embed-responsive--16-9');
         var s7ServerURL = 'https://s7d2.scene7.com/is/image/';
@@ -554,12 +627,12 @@ var Loupe = (function () {
                     .on('click', function () {
                         // Class generated by S7, selected="false" equivalent to pauseBtn
                         $('#loupe-viewer_playPauseButton[selected="false"]').click();
-                    })
-                    .on('afterChange', function(event, slick, currentSlide, nextSlide){
-                        if (currentSlide != $('.loupe__slide').length - 1) {
-                            $('#loupe-viewer_playPauseButton[selected="false"]').click();
-                        }
                     });
+
+                // Slick change to non-video nav item to pause
+                $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
+                    $('#loupe-viewer_playPauseButton[selected="false"]').click();
+                });
 
                 // Click on video nav item to play
                 $(config.navVideoSelector)
@@ -567,12 +640,26 @@ var Loupe = (function () {
                     .on('click', function () {
                         // Class generated by S7, selected="true" equivalent to playBtn
                         $('#loupe-viewer_playPauseButton[selected="true"]').click();
-                    })
-                    .on('afterChange', function(event, slick, currentSlide, nextSlide){
-                        if (currentSlide == $('.loupe__slide').length - 1) {
-                            $('#loupe-viewer_playPauseButton[selected="true"]').click();
+                    });
+
+                // Slick change to video nav item to play
+                $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
+                    // Trigger 'play' if this is a video slide
+                    if ($('.loupe__slide').eq(currentSlide).hasClass('loupe__slide--video')) {
+                        $('#loupe-viewer_playPauseButton[selected="true"]').click();
+                    }
+                });
+
+                // Setup play/pause on scroll if scrollOnDesktop == true
+                if (config.scrollOnDesktop) {
+                    $(window).on('scroll', function() {
+                        if (_isScrolledIntoView($('.loupe__slide--video', false))) {
+                            $('#loupe-viewer_playPauseButton[selected="true"]').click(); // Play
+                        } else {
+                            $('#loupe-viewer_playPauseButton[selected="false"]').click(); // Pause
                         }
                     });
+                }
             };
             tag.src = scriptURL;
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
@@ -636,39 +723,57 @@ $(function() {
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_a1",
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_f",
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2"
-    ],
-    video: {
-      data: "sor16-web",
-      host: "scene7"
-    }
+    ]
   };
 
+  // Test defaults
   $(".swatch1").on("click", function() {
+    Loupe.init({}, imgData);
+  });
+  $(".swatch2").on("click", function() {
+    Loupe.init({}, imgData_vimeo);
+  });
+  $(".swatch3").on("click", function() {
+    Loupe.init({}, imgData_s7);
+  });
+
+  // Test compact mode
+  $(".swatch1.js-mode-compact").on("click", function() {
+    Loupe.init({ showThumbnails: false }, imgData);
+  });
+  $(".swatch2.js-mode-compact").on("click", function() {
+    Loupe.init({ showThumbnails: false }, imgData_vimeo);
+  });
+  $(".swatch3.js-mode-compact").on("click", function() {
+    Loupe.init({ showThumbnails: false }, imgData_s7);
+  });
+
+  // Test scrollOnDesktop
+  $(".swatch1.js-mode-scroll").on("click", function() {
     Loupe.init(
       {
-        showThumbnails: false,
-        // scrollOnDesktop: true
+        showThumbnails: true,
+        scrollOnDesktop: true
       },
       imgData
     );
   });
-  $(".swatch2").on("click", function() {
+  $(".swatch2.js-mode-scroll").on("click", function() {
     Loupe.init(
       {
-        showThumbnails: false
+        showThumbnails: true,
+        scrollOnDesktop: true
       },
       imgData_vimeo
     );
   });
-  $(".swatch3").on("click", function() {
+  $(".swatch3.js-mode-scroll").on("click", function() {
     Loupe.init(
       {
-        showThumbnails: false
+        showThumbnails: true,
+        scrollOnDesktop: true
       },
       imgData_s7
     );
-  });
-  $(".swatch4").on("click", function() {
-    Loupe.init({}, imgData);
   });
 });
