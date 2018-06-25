@@ -5,6 +5,7 @@ $_loupe-color-dark: #777;
 $_loupe-color-border-selected: #999;
 $_loupe-mobile-slide-height: 325px;
 $_loupe-desktop-slide-height: 625px;
+$_loupe-desktop-thumbnail-width: 89px;
 $_loupe-desktop-thumbnail-height: 89px;
 $_loupe-nav-font-family-icon: "Fontawesome";
 $_loupe-nav-font-size-icon: 0.75rem;
@@ -56,27 +57,6 @@ $_loupe-nav-icon-spacing: 0.75rem;
 
     @media (max-width: $tablet-max-width) {
       margin-bottom: 1.625rem; // Match offset of dots bottom position
-    }
-  }
-
-  /// S7 viewer Overrides
-  #loupe-viewer.s7videoviewer {
-    height: $_loupe-desktop-slide-height;
-  }
-
-  /// Center within #loupe-viewer
-  #loupe-viewer_container.s7videoviewer {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  #loupe-viewer_videoPlayer.s7videoplayer {
-    div {
-      &:focus {
-        outline: none; // Disable glowing blue outline
-      }
     }
   }
 
@@ -134,6 +114,7 @@ $_loupe-nav-icon-spacing: 0.75rem;
 
 /// Loupe navigation
 .loupe-nav {
+  width: $_loupe-desktop-thumbnail-width; // Force width for nav thumbnails on tablet / mobile
   height: $_loupe-desktop-slide-height; // Force height for nav thumbnails on tablet / mobile
 
   &__item {
@@ -142,6 +123,7 @@ $_loupe-nav-icon-spacing: 0.75rem;
     max-height: $_loupe-desktop-thumbnail-height;
     margin-bottom: 1rem;
     overflow: hidden;
+    cursor: pointer;
 
     /// Navigation for video item
     &--video {
@@ -305,18 +287,36 @@ $_loupe-nav-icon-spacing: 0.75rem;
   }
 }
 
-/// TODO: See if there's a way to refactor Scene7 video viewer template
-#s7_videoview.s7videoviewer {
-  width: 100%;
-  height: auto;
-}
-
 /// Container for third-party videos
 /// TODO: Move to a different SCSS file (object layer)
 .embed-responsive--16-9 {
   position: relative;
   padding-top: 56.25%;
   margin-top: 21%; // ~ (1 - 9/16) / 2 (50% of full height - minus aspect ratio)
+
+  // Override defaults when viewing S7 videos
+  &.s7videoviewer {
+    padding-top: 0;
+    margin-top: 0;  
+    width: 100%;
+    height: $_loupe-desktop-slide-height;
+  }
+
+  /// Center within #loupe-viewer
+  & #loupe-viewer_container.s7videoviewer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  & #loupe-viewer_videoPlayer.s7videoplayer {
+    div {
+      &:focus {
+        outline: none; // Disable glowing blue outline
+      }
+    }
+  }
 
   @media (max-width: $mobile-max-width) {
     height: $_loupe-mobile-slide-height;

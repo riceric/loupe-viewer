@@ -723,7 +723,11 @@ $(function() {
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_a1",
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_805_f",
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2"
-    ]
+    ],
+    video: {
+        data: "sor16-web",
+        host: "scene7"
+    }
   };
 
   // Test defaults
