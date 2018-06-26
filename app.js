@@ -141,6 +141,7 @@ var Loupe = (function () {
     var _loadVideo = function(host, id) {
         console.log('_loadVideo()... host = ' + host);
         var loadVideoEvent = function () {
+            console.log('loadVideoEvent()...');
             // If video is already loaded, just play video
             if ($(config.videoSelector).find('#loupe-video').length < 1) {
                 // Init correct viewer based on current host
@@ -155,9 +156,10 @@ var Loupe = (function () {
         };
 
         // Keep checking until slick has completed adding video slides
-        if (_getVideoID !== null && $(config.videoSelector).length > 0) {
+        console.log('Checking if video slide exists: _getVideoID = ' + _getVideoID() + ', config.videoSelector = ' + config.videoSelector);
+        if (_getVideoID() != null && $(config.videoSelector).length > 0) {
             var videoSlideExists = setInterval(function() {
-            console.log("videoSelector.length = " + $(config.videoSelector).length);
+            console.log("videoSelector.length = " + $(config.videoSelector).length + ', config.scrollOnDesktop = '  + config.scrollOnDesktop);
                 // If scrollOnDesktop = true, don't wait for click event to load video
                 if ($(config.scrollOnDesktop)) {
                     loadVideoEvent();
@@ -183,11 +185,12 @@ var Loupe = (function () {
      * @param {function} callback Optional call back function
      */
     var _addSlide = function (slidesObj, slideHTML, callback) {
-        console.log('_addSlide ' + slideHTML);
+        console.log('_addSlide ...(slidesObj = '+ slidesObj.attr('class') + ')\n\r' + slideHTML);
         slidesObj.slick('slickAdd', slideHTML);
         if (callback != null) {
             callback();
         }
+        console.log('_addSlide COMPLETE: '+ slidesObj.attr('class') + ', video slides: ' + $('.loupe-main').find('.loupe__slide--video').length + ')\n\r' + slideHTML);
     }
 
     /**
@@ -233,11 +236,13 @@ var Loupe = (function () {
                         // Add video slick slide with video placeholder, add navigation slide
                         _addSlide($slides, vidSlideHTML);
                         _addSlide($nav, vidNavSlide, _styleVideoDot);
+                        console.log('.loupe__slide--video should exist now. Length = ' + $('.loupe__slide--video').length);
 
                         // Load video
                         _loadVideo(imgData['video'].host, videoID);
                     }
                 );
+
             } else if (imgData['video'].host == 'scene7') {
                 var vidNavSlide = '<div class="loupe-nav__item loupe-nav__item--video">' +
                     '<img src="https://s7d2.scene7.com/is/image/ColumbiaSportswear2/' + videoID + '?wid=' + config.defaultWidth + '" class="loupe-nav__img" ' +
@@ -361,7 +366,6 @@ var Loupe = (function () {
      * @param {String} imgData JSON data containing image URLs
      */
     var _loadCarouselViewers = function (imgData) {
-
         // Maximum slides to show in mobile navigation
         var maxSlides = 7;
 
@@ -691,18 +695,6 @@ $(function() {
       host: "youtube"
     }
   };
-  var imgData_yt2 = {
-    images: [
-      "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_691_f",
-      "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_691_b",
-      "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_691_a1",
-      "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_691_a2"
-    ],
-    video: {
-      data: "tu2-xbn2Zjc",
-      host: "youtube"
-    }
-  };
   var imgData_vimeo = {
     images: [
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/RM2023_691_f",
@@ -731,13 +723,13 @@ $(function() {
   };
 
   // Test defaults
-  $(".swatch1").on("click", function() {
+  $(".swatch1.js-mode-default").on("click", function() {
     Loupe.init({}, imgData);
   });
-  $(".swatch2").on("click", function() {
+  $(".swatch2.js-mode-default").on("click", function() {
     Loupe.init({}, imgData_vimeo);
   });
-  $(".swatch3").on("click", function() {
+  $(".swatch3.js-mode-default").on("click", function() {
     Loupe.init({}, imgData_s7);
   });
 
