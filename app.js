@@ -29,7 +29,7 @@ var Loupe = (function () {
                 videoSelector: '.loupe__slide--video',
                 navItemSelector: '.loupe-nav__item, .slick-dots button',
                 navVideoSelector: '.loupe-nav__item--video, .slick-is-video',
-                scrollOnDesktop: false, // Placeholder for MHW/SOR functionality
+                scrollOnDesktop: false,
                 showThumbnails: true, // Toggle thumbnails, eg. Quick View
                 viewerCarouselOptions: {
                     accessibility: false,
@@ -39,6 +39,7 @@ var Loupe = (function () {
                     arrows: false,
                     dots: true,
                     fade: true,
+                    infinite: false,
                     swipe: true,
                     asNavFor: '.loupe-nav' // TODO: Make this configurable
                 },
@@ -47,11 +48,11 @@ var Loupe = (function () {
                     mobileFirst: true,
                     slidesToShow: 6,
                     focusOnSelect: true,
+                    infinite: false,
                     swipe: true,
                     vertical: false,
                     verticalSwiping: false,
                     asNavFor: '.loupe-main', // TODO: Make this configurable
-                    infinite: false,
 
                     responsive: [{
                         breakpoint: app.constants.TABLET_MAX_WIDTH,
@@ -98,7 +99,18 @@ var Loupe = (function () {
         }
     };
 
+    // Object to store multiple YT Players with separate API event handlers
+    _.YTPlayers = {};
+
     //-------------------- HELPER FUNCTIONS --------------------//
+    /**
+     * Reinitialize slick if not already initialized
+     */
+    var _reinitSlick = function() {
+        $(config.slideContainer).not('.slick-initialized').slick(config.viewerCarouselOptions);
+        $(config.navContainer).not('.slick-initialized').slick(config.navCarouselOptions);
+    }
+    
     /**
      * Removes all slides from an existing Slick JS carousel
      * @param {String} slidesObj Target slide container
@@ -139,9 +151,7 @@ var Loupe = (function () {
      * @param {string} id Unique identifier for video
      */
     var _loadVideo = function(host, id) {
-        console.log('_loadVideo()... host = ' + host);
         var loadVideoEvent = function () {
-            console.log('loadVideoEvent()...');
             // If video is already loaded, just play video
             if ($(config.videoSelector).find('#loupe-video').length < 1) {
                 // Init correct viewer based on current host
@@ -156,23 +166,23 @@ var Loupe = (function () {
         };
 
         // Keep checking until slick has completed adding video slides
-        console.log('Checking if video slide exists: _getVideoID = ' + _getVideoID() + ', config.videoSelector = ' + config.videoSelector);
         if (_getVideoID() != null && $(config.videoSelector).length > 0) {
             var videoSlideExists = setInterval(function() {
-            console.log("videoSelector.length = " + $(config.videoSelector).length + ', config.scrollOnDesktop = '  + config.scrollOnDesktop);
                 // If scrollOnDesktop = true, don't wait for click event to load video
                 if ($(config.scrollOnDesktop)) {
                     loadVideoEvent();
+                } else {
+                    // If not scrolling, apply 'afterChange' listener for slick sliders
+                    $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
+                        // Trigger 'play' if this is a video slide
+                        if ($('.loupe__slide').eq(currentSlide).hasClass('loupe__slide--video')) {
+                            loadVideoEvent();
+                        }
+                    });
+                    // Add click event to video navigation
+                    $(config.navSlide).on('click.loupeVideo', loadVideoEvent);
                 }
-                // Add click event to video navigation
-                $(config.navSlide).on('click.loupeVideo', loadVideoEvent);
                 // Add event to slick afterChange event, capturing any navigation to slide
-                $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
-                    // Trigger 'play' if this is a video slide
-                    if ($('.loupe__slide').eq(currentSlide).hasClass('loupe__slide--video')) {
-                        loadVideoEvent();
-                    }
-                });
                 clearInterval(videoSlideExists);
             }, 100);
         }
@@ -185,12 +195,10 @@ var Loupe = (function () {
      * @param {function} callback Optional call back function
      */
     var _addSlide = function (slidesObj, slideHTML, callback) {
-        console.log('_addSlide ...(slidesObj = '+ slidesObj.attr('class') + ')\n\r' + slideHTML);
         slidesObj.slick('slickAdd', slideHTML);
         if (callback != null) {
             callback();
         }
-        console.log('_addSlide COMPLETE: '+ slidesObj.attr('class') + ', video slides: ' + $('.loupe-main').find('.loupe__slide--video').length + ')\n\r' + slideHTML);
     }
 
     /**
@@ -198,7 +206,6 @@ var Loupe = (function () {
      * @param {*} imgData 
      */
     var _appendVideoSlides = function (imgData) {
-        console.log('_appendVideoSlides...videoID = ' + _getVideoID() + ', host = ' + imgData['video'].host);
         var $slides = $(config.slideContainer);
         var $nav = $(config.navContainer);
         var videoID = _getVideoID();
@@ -221,27 +228,28 @@ var Loupe = (function () {
                 _loadVideo(imgData["video"].host, videoID);
 
             } else if (imgData["video"].host == "vimeo") {
+                var vidNavSlide;
                 // If video is hosted by Vimeo, get thumbnail URL, which is different than the videoID and requires an API call
                 $.getJSON(
                     'https://www.vimeo.com/api/v2/video/' + videoID + '.json?callback=?', {
                         format: 'json'
                     },
                     function (data) {
-                        var vidNavSlide = '<div class="loupe-nav__item loupe-nav__item--video">' +
+                        vidNavSlide = '<div class="loupe-nav__item loupe-nav__item--video">' +
                             '<img src="https://i.vimeocdn.com/video/' + data[0].thumbnail_large + '" ' +
                             'class="loupe-nav__img" ' +
                             'alt="Video thumbnail: ' + imgData.colorValue + ' ' + imgData.alt + '" />' +
                             '</div>';
-
-                        // Add video slick slide with video placeholder, add navigation slide
-                        _addSlide($slides, vidSlideHTML);
+                        // Add navigation slide once data is available
                         _addSlide($nav, vidNavSlide, _styleVideoDot);
-                        console.log('.loupe__slide--video should exist now. Length = ' + $('.loupe__slide--video').length);
-
-                        // Load video
-                        _loadVideo(imgData['video'].host, videoID);
                     }
                 );
+
+                // Add video slick slide with video placeholder (does not depend on json and can fire asynchronously)
+                _addSlide($slides, vidSlideHTML);
+
+                // Load video
+                _loadVideo(imgData['video'].host, videoID);
 
             } else if (imgData['video'].host == 'scene7') {
                 var vidNavSlide = '<div class="loupe-nav__item loupe-nav__item--video">' +
@@ -277,8 +285,13 @@ var Loupe = (function () {
      * 
      */
     var _setCompactMode = function () {
+        // If scroll mode is detected, you have to first reinit slick
+        if (config.scrollOnDesktop) {
+            _reinitSlick();
+        }
         // TODO: Update function to omit unneeded component; for now, we're just hiding it
         $(config.navContainer).hide();
+
         $(config.slideContainer).slick('setOption', 'dots', true, true);
         if (_getVideoID() !== null) {
             _styleVideoDot();
@@ -378,9 +391,8 @@ var Loupe = (function () {
         // numSlides: Hardcoding 1 for video until support is added for multiple videos
         var numSlides = Object.keys(imgData.images).length + 1;
 
-        // Load slick sliders only if slick hasn't already been initialized
-        $slides.not('.slick-initialized').slick(config.viewerCarouselOptions);
-        $nav.not('.slick-initialized').slick(config.navCarouselOptions);
+        // reinitSlick will load slick sliders, only if slick isn't already initialized
+        _reinitSlick();
 
         // Remove all slides from any existing slides
         _deleteAllSlides($slides);
@@ -412,7 +424,7 @@ var Loupe = (function () {
             $slides.find('.loupe__slide').attr('style',''); // Temporary fix for Slick JS 1.6.0 bug
 
             // Make nav links slide to loupe-main slide
-            $nav.on('click', '.loupe-nav__item', function() {
+            $nav.on('click.loupeScrollMode', '.loupe-nav__item', function() {
                 var idx = $(this).index();
                 var $scrollTarget = $('.loupe__slide').get(idx);
 
@@ -426,6 +438,9 @@ var Loupe = (function () {
                     $('html, body').stop();
                 });
             });
+        } else {
+            // Remove any existing scroll mode listeners
+            $nav.off('click.loupeScrollMode');
         }
     };
 
@@ -441,31 +456,38 @@ var Loupe = (function () {
         var width = config.defaultWidth;
         var height = config.defaultHeight;
         var videoHTML =
-            '<iframe id="loupe-video" type="text/html" width="' + width + '" height="' + height + '" ' +
+            '<iframe id="loupevid_' + videoID + '" type="text/html" width="' + width + '" height="' + height + '" ' +
             'src="https://www.youtube.com/embed/' + videoID + '?color=white&rel=0&showinfo=0&enablejsapi=1" frameborder="0" allowFullScreen="allowFullScreen">' +
             "</iframe>";
 
         // Load video into slide
         $target.html(videoHTML);
 
-        // Use API with existing YouTube player
-        // Only load YouTube script if it is not found (YTPlayer defined)
-        // Loads the YouTube IFrame Player API code asynchronously.
-        if (typeof YTPlayer == 'undefined') {
-            var tag = document.createElement('script');
-            var firstScriptTag = document.getElementsByTagName('script')[0];
-            tag.src = scriptURL;
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        }
-
-        // Use API with existing YouTube player
-        window.onYouTubeIframeAPIReady = function () {
-            window.YTPlayer = new YT.Player('loupe-video', {
+        _createYTPlayer = function() {
+            // Add YT.Player to global collection of player objects
+            return _.YTPlayers[videoID] = new YT.Player('loupevid_' + videoID, {
                 events: {
                     onReady: onPlayerReady
                 }
             });
-        };
+        }
+
+        // Use API with existing YouTube player
+        // TODO: Add check for to see if specific YT.Player exists with current ID
+        if (typeof window.onYouTubeIframeAPIReady == 'undefined' || typeof(YT) == 'undefined' || typeof(YT.Player) == 'undefined') {
+            var tag = document.createElement('script');
+            var firstScriptTag = document.getElementsByTagName('script')[0];
+            tag.src = scriptURL;
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+            window.onYouTubeIframeAPIReady = function () {
+                _createYTPlayer();
+            };
+        }
+        // onYouTubeIframeAPIReady is already defined; just add a new YTPlayer
+        else {
+            _createYTPlayer();
+        }
 
         // The API will call this function when the video player is ready.
         window.onPlayerReady = function (event) {
@@ -473,26 +495,26 @@ var Loupe = (function () {
             $(config.navItemSelector)
                 .not(config.navVideoSelector)
                 .on('click', function () {
-                    YTPlayer.pauseVideo();
+                    _.YTPlayers[videoID].pauseVideo();
                 });
 
             // Slick change to non-video nav item to pause
             $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
-                YTPlayer.pauseVideo();
+                _.YTPlayers[videoID].pauseVideo();
             });
 
             // Click on to video nav item to play
             $(config.navVideoSelector)
                 .off('click.loupeVideo')
                 .on('click', function () {
-                    YTPlayer.playVideo();
+                    _.YTPlayers[videoID].playVideo();
                 });
 
             // Slick change to video nav item to play
             $(config.slideContainer).on('afterChange', function(event, slick, currentSlide, nextSlide){
                 // Trigger 'play' if this is a video slide
                 if ($('.loupe__slide').eq(currentSlide).hasClass('loupe__slide--video')) {
-                    YTPlayer.playVideo();
+                    _.YTPlayers[videoID].playVideo();
                 }
             });
 
@@ -500,9 +522,9 @@ var Loupe = (function () {
             if (config.scrollOnDesktop) {
                 $(window).on('scroll', function() {
                     if (_isScrolledIntoView($('.loupe__slide--video', false))) {
-                        YTPlayer.playVideo();
+                        _.YTPlayers[videoID].playVideo();
                     } else {
-                        YTPlayer.pauseVideo();
+                        _.YTPlayers[videoID].pauseVideo();
                     }
                 });
             }
@@ -671,7 +693,8 @@ var Loupe = (function () {
     };
 
     return {
-        init: init
+        init: init,
+        YTPlayers: YTPlayers
     };
 })();
 
