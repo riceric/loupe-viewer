@@ -114,8 +114,6 @@ $_loupe-nav-icon-spacing: 0.75rem;
 
 /// Loupe navigation
 .loupe-nav {
-  width: $_loupe-desktop-thumbnail-width; // Force width for nav thumbnails on tablet / mobile
-  height: $_loupe-desktop-slide-height; // Force height for nav thumbnails on tablet / mobile
 
   &__item {
     position: relative;
@@ -228,7 +226,6 @@ $_loupe-nav-icon-spacing: 0.75rem;
   }
 
   .slick-list {
-    min-height: $_loupe-desktop-slide-height; // Fix height bug
     @media (max-width: $mobile-max-width) {
       min-height: 320px;
     }

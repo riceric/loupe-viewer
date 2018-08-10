@@ -107,10 +107,11 @@ var Loupe = (function () {
      * Reinitialize slick if not already initialized
      */
     var _reinitSlick = function() {
+        // Reinitialize slick on empty container... we will be loading them up again
         $(config.slideContainer).not('.slick-initialized').slick(config.viewerCarouselOptions);
         $(config.navContainer).not('.slick-initialized').slick(config.navCarouselOptions);
     }
-    
+
     /**
      * Removes all slides from an existing Slick JS carousel
      * @param {String} slidesObj Target slide container
@@ -268,16 +269,23 @@ var Loupe = (function () {
     }
     /**
      * When the actual number of slides is less than the max number of
-     * Navigation dots
+     * navigation slides, adjust the nav height (desktop only)
      * @param {Object} navObj Target container for navigation slides
      * @param {Integer} numSlides Number of slides in the nav
      * @param {Integer} maxSlides Maximum slides to show in mobile navigation
      */
-    var _recenterNav = function (navObj, numSlides, maxSlides) {
+    var _resetNavDimensions = function (navObj, maxSlides) {
+        // Get the total slide count
+        var numSlides = $(navObj).find('.loupe-nav__item').length;
+        var slideHeight = $('.loupe-nav__item').first().outerHeight(true);
+
         if (numSlides > maxSlides) {
             navObj.slick('setOption', 'slidesToShow', maxSlides, true);
         } else {
-            navObj.slick('setOption', 'slidesToShow', numSlides, true);
+            $(navObj).slick('setOption', 'slidesToShow', numSlides, true)
+                .on('setPosition', function(event, slick) {
+                    slick.$list.height(slideHeight * numSlides);
+                });
         }
     }
 
@@ -292,10 +300,14 @@ var Loupe = (function () {
         // TODO: Update function to omit unneeded component; for now, we're just hiding it
         $(config.navContainer).hide();
 
+        // Use custom dot navigation
         $(config.slideContainer).slick('setOption', 'dots', true, true);
         if (_getVideoID() !== null) {
             _styleVideoDot();
         }
+
+        // Turn off video scroll event listeners
+        $(window).off('scroll.loupeVideo');
     }
 
     /**
@@ -348,29 +360,53 @@ var Loupe = (function () {
      * @access public
      * @param {String} selector DOM selector containing loupe images
      */
-    var _magnify = function (selector) {
-        // TODO: Investigate why event listeners were not getting assigned/reassigned to .loupe in original implementation
+    var _magnify = function(selector) {
+        var dragging = false;    // Distinguish touch from touchmove/"finger drag"
         $(config.slideContainer).off(); // Reset listeners
-        $(config.slideContainer).on({
-            click: function () {
-                var imgURI = $(this).data('lgimg');
-                $(this).css('background-image', 'url(' + imgURI + ')');
-                $(this).toggleClass('is-active');
-            },
-            mousemove: function (e) {
-                if ($(this).hasClass('is-active')) {
-                    var magnified = e.currentTarget;
-                    e.offsetX ? (offsetX = e.offsetX) : (offsetX = e.touches[0].pageX);
-                    e.offsetY ? (offsetY = e.offsetY) : (offsetX = e.touches[0].pageX);
-                    x = offsetX / magnified.offsetWidth * 100;
-                    y = offsetY / magnified.offsetHeight * 100;
+        $(config.slideContainer)
+            // Track both click and touchstart
+            .on('click', selector, function(e) {
+                dragging = false; // Reset default each time a new touchstart is detected
+            })
+            // Track mouseup and touchend
+            .on('mouseup', selector, function(e) {
+                if (!dragging) {
+                    var imgURI = $(this).data('lgimg');
+                    $(e.currentTarget).css('background-image', 'url(' + imgURI + ')');
+                    $(e.currentTarget).toggleClass('is-active');
+                }
+            })
+            .on('touchmove', selector, function(e) {
+                // Track finger dragging on touch devices
+                var magnified = e.currentTarget;
+                dragging = true;
+                if ($(magnified).hasClass('is-active')) {
+                    e.preventDefault(); // Prevent scrolling when navigating in zoom mode
+                    var touch = e.originalEvent.touches[0];
+                    // Calculate magnified DOM element offsets since they are not explicitly defined in e.touches
+                    if (touch.pageY >= $(magnified).offset().top && 
+                        touch.pageY < $(magnified).offset().top + $(magnified).height() &&
+                        touch.pageX >= $(magnified).offset().left && 
+                        touch.pageX < $(magnified).offset().left + $(magnified).width()
+                    ) {
+                        x = (touch.pageX - $(magnified).offset().left) / $(magnified).width() * 100;
+                        y = (touch.pageY - $(magnified).offset().top) / $(magnified).height() * 100;
+                        magnified.style.backgroundPosition = x + '% ' + y + '%';
+                    }
+                }
+            })
+            .on('mousemove', selector, function(e) {
+                // Track mouse movement on desktop
+                var magnified = e.currentTarget;
+                if ($(magnified).hasClass('is-active')) {
+                    x = e.offsetX / magnified.offsetWidth * 100;
+                    y = e.offsetY / magnified.offsetHeight * 100;
                     magnified.style.backgroundPosition = x + '% ' + y + '%';
                 }
-            },
-            mouseleave: function () {
-                $(this).removeClass('is-active');
-            }
-        }, selector);
+            })
+            .on('mouseleave', selector, function () {
+                $(e.currentTarget).removeClass('is-active');
+            });
     };
 
     /**
@@ -379,27 +415,16 @@ var Loupe = (function () {
      * @param {String} imgData JSON data containing image URLs
      */
     var _loadCarouselViewers = function (imgData) {
-        // Maximum slides to show in mobile navigation
-        var maxSlides = 7;
-
         // Define nav and viewer selectors from config
         var $slides = $(config.slideContainer);
         var $nav = $(config.navContainer);
-        var $navItemVid = $(config.navVideoSelector);
-        var $videoSlide = $(config.videoSelector);
-
-        // numSlides: Hardcoding 1 for video until support is added for multiple videos
-        var numSlides = Object.keys(imgData.images).length + 1;
 
         // reinitSlick will load slick sliders, only if slick isn't already initialized
         _reinitSlick();
 
-        // Remove all slides from any existing slides
+        // Remove all slides from any existing carousels
         _deleteAllSlides($slides);
         _deleteAllSlides($nav);
-
-        // Re-center navigation based on how many slides should show
-        _recenterNav($nav, numSlides, maxSlides);
 
         // Setup carousel slides
         for (var i in imgData["images"]) {
@@ -415,6 +440,9 @@ var Loupe = (function () {
 
         // Add video slide
         _appendVideoSlides(imgData);
+
+        // Update navigation height based on how many slides should show
+        _resetNavDimensions($nav, config.navCarouselOptions.slidesToShow);
 
         // Exception: do not initialize slides if scrolling
         if (config.scrollOnDesktop) {
@@ -520,7 +548,7 @@ var Loupe = (function () {
 
             // Setup play/pause on scroll if scrollOnDesktop == true
             if (config.scrollOnDesktop) {
-                $(window).on('scroll', function() {
+                $(window).on('scroll.loupeVideo', function() {
                     if (_isScrolledIntoView($('.loupe__slide--video', false))) {
                         _.YTPlayers[videoID].playVideo();
                     } else {
@@ -591,7 +619,7 @@ var Loupe = (function () {
 
                 // Setup play/pause on scroll if scrollOnDesktop == true
                 if (config.scrollOnDesktop) {
-                    $(window).on('scroll', function() {
+                    $(window).on('scroll.loupeVideo', function() {
                         if (_isScrolledIntoView($('.loupe__slide--video', false))) {
                             vimeoPlayer.play();
                         } else {
@@ -678,7 +706,7 @@ var Loupe = (function () {
 
                 // Setup play/pause on scroll if scrollOnDesktop == true
                 if (config.scrollOnDesktop) {
-                    $(window).on('scroll', function() {
+                    $(window).on('scroll.loupeVideo', function() {
                         if (_isScrolledIntoView($('.loupe__slide--video', false))) {
                             $('#loupe-viewer_playPauseButton[selected="true"]').click(); // Play
                         } else {
@@ -710,8 +738,8 @@ $(function() {
     images: [
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_f",
       "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_b",
-      "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a1",
-      "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2"
+    //   "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a1",
+    //   "https://s7d5.scene7.com/is/image/ColumbiaSportswear2/1792132_039_a2"
     ],
     video: {
       data: "tu2-xbn2Zjc",
